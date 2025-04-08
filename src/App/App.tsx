@@ -1,12 +1,8 @@
 import { useState } from "react";
+import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
+import { Position, GRID_SIZE } from "../Models/AlgorithmsModels";
 import "./App.css";
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-const GRID_SIZE = 10;
 
 // Función para convertir texto en matriz
 const parseGrid = (text: string): number[][] => {
@@ -70,9 +66,6 @@ function App() {
     initialBase.flat().filter((cell) => cell === 4).length
   );
 
-
-
-
   // Función para mover el dron
   const moveDrone = (dx: number, dy: number) => {
     const newX = dronePosition.x + dx;
@@ -129,6 +122,31 @@ function App() {
 
 
 
+
+
+
+  const runBreadthFirstSearch = async () => {
+
+    const path = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
+
+    if (!path) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
+    }
+
+    for (let i = 1; i < path.length; i++) {
+      const dx = path[i].x - dronePosition.x;
+      const dy = path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+  };
+
+
+  
+
+
+
   return (
     <div className="container">
       <h2>Smart Drone 🚁</h2>
@@ -161,6 +179,9 @@ function App() {
               <button onClick={() => moveDrone(-1, 0)}>⬅️</button>
               <button onClick={() => moveDrone(0, 1)}>⬇️</button>
               <button onClick={() => moveDrone(1, 0)}>➡️</button>
+            </div>
+            <div className="row">
+              <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
             </div>
           </div>
           <div>
