@@ -5,17 +5,19 @@ interface Node {
   parent: Node | null;
   f: number;
   path: Position[];
-  depth: number;  // Add depth tracking
+  depth: number;
+  cost: number;  // Añadimos el costo al nodo
 }
 
 export function GreedyBestFirstSearch(
   grid: number[][],
   start: Position,
   packagesLeft: number
-): { path: Position[] | null, metrics: SearchMetrics } {
+): { path: Position[] | null, metrics: SearchMetrics & { totalCost: number } } {
   const startTime = performance.now();
   let expandedNodes = 0;
   let maxDepth = 0;
+  let totalCost = 0;
   
   let currentPosition = start;
   let completePath: Position[] = [start];
@@ -24,12 +26,10 @@ export function GreedyBestFirstSearch(
 
   while (packagesRemaining > 0) {
     const result = findNextPackage(remainingGrid, currentPosition);
-    //console.log(`Para el paquete ${packagesLeft - packagesRemaining + 1}, se exploraron ${result.expandedNodes} nodos`);
     console.log("Nodos explorados para el primer paquete:", result.expandedNodes);
     console.log("Profundidad máxima alcanzada:", result.depth);
-    //console.log("Tiempo de cálculo:", result.computationTime);
+    console.log("Costo del camino:", result.cost);
 
-    
     if (!result || !result.path) {
       const endTime = performance.now();
       return {
@@ -37,13 +37,15 @@ export function GreedyBestFirstSearch(
         metrics: {
           expandedNodes,
           treeDepth: maxDepth,
-          computationTime: endTime - startTime
+          computationTime: endTime - startTime,
+          totalCost
         }
       };
     }
 
     expandedNodes += result.expandedNodes;
     maxDepth = Math.max(maxDepth, result.depth);
+    totalCost += result.cost;  // Se suma el costo del camino al costo total
     completePath = completePath.concat(result.path.slice(1));
     currentPosition = result.path[result.path.length - 1];
     remainingGrid[currentPosition.y][currentPosition.x] = 0;
@@ -56,7 +58,8 @@ export function GreedyBestFirstSearch(
     metrics: {
       expandedNodes,
       treeDepth: maxDepth,
-      computationTime: endTime - startTime
+      computationTime: endTime - startTime,
+      totalCost
     }
   };
 }
@@ -64,7 +67,8 @@ export function GreedyBestFirstSearch(
 function findNextPackage(grid: number[][], start: Position): { 
   path: Position[] | null, 
   expandedNodes: number,
-  depth: number 
+  depth: number,
+  cost: number 
 } {
   const openSet: Node[] = [];
   const closedSet = new Set<string>();
@@ -76,7 +80,8 @@ function findNextPackage(grid: number[][], start: Position): {
     parent: null,
     f: heuristic(start, grid),
     path: [start],
-    depth: 0
+    depth: 0,
+    cost: 0
   };
 
   openSet.push(startNode);
@@ -91,7 +96,8 @@ function findNextPackage(grid: number[][], start: Position): {
       return {
         path: current.path,
         expandedNodes,
-        depth: maxDepth
+        depth: maxDepth,
+        cost: current.cost
       };
     }
 
@@ -103,13 +109,18 @@ function findNextPackage(grid: number[][], start: Position): {
       const moveKey = `${move.x},${move.y}`;
       if (closedSet.has(moveKey)) continue;
 
+      // Calcular el costo del movimiento
+      const moveCost = grid[move.y][move.x] === 3 ? 8 : 1;
+      const newCost = current.cost + moveCost;
+
       const newPath = [...current.path, move];
       const newNode: Node = {
         position: move,
         parent: current,
         f: heuristic(move, grid),
         path: newPath,
-        depth: current.depth + 1
+        depth: current.depth + 1,
+        cost: newCost //Se guarda el costo acumulado en el nod
       };
 
       const existingNode = openSet.find(
@@ -131,7 +142,8 @@ function findNextPackage(grid: number[][], start: Position): {
   return {
     path: null,
     expandedNodes,
-    depth: maxDepth
+    depth: maxDepth,
+    cost: 0
   };
 }
 

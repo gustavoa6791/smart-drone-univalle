@@ -32,4 +32,5 @@ export interface SearchMetrics {
   expandedNodes: number;
   treeDepth: number;
   computationTime: number;
+  totalCost: number;
 }

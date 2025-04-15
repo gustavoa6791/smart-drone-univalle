@@ -155,7 +155,10 @@ function App() {
     alert(`Reporte de búsqueda:
       Nodos expandidos: ${result.metrics.expandedNodes}
       Profundidad del árbol: ${result.metrics.treeDepth}
-      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms`);
+      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
+      Costo total del camino: ${result.metrics.totalCost}`);
+      
+      
 
     for (let i = 1; i < result.path.length; i++) {
       const dx = result.path[i].x - dronePosition.x;
