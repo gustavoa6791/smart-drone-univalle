@@ -5,6 +5,13 @@ export interface Position {
     y: number;
 }
 
+export interface SearchMetrics {
+    expandedNodes: number;
+    treeDepth: number;
+    computationTime: number;
+    totalCost: number;
+}
+
 // Nodo con estado y camino acumulado.
 export interface QueueNode {
     pos: Position;
@@ -20,17 +27,3 @@ export const DIRECTIONS = [
     { dx: 0, dy: -1 },  // Arriba
     { dx: 0, dy: 1 }    // Abajo
 ];
-
-
-
-
-
-
-
-// Add this interface to AlgorithmsModels.ts
-export interface SearchMetrics {
-  expandedNodes: number;
-  treeDepth: number;
-  computationTime: number;
-  totalCost: number;
-}
