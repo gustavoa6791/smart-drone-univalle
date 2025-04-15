@@ -144,8 +144,6 @@ function App() {
     setCost(newCost);
   };
 
-
-
   // Función para generar un nuevo mundo a partir del textarea
   const generateWorld = () => {
     const newBase = parseGrid(inputText);
@@ -237,9 +235,38 @@ function App() {
     showCompletitionMessage("Busqueda por profundidad completa")
   };
 
+  const runDepthFirstSearch = async () => {
+    setCompletionMessage(""); //limpia el mensaje antes de iniciar
+    setExpandedNodes(0);
+    setMaxDepth(0);
+    setComputationTime(0);
+
+    const startTime = Date.now();
+    const result = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    //const {path, expandedNodes, maxDepth, computationTime} = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
+
+    const endTime = Date.now()
+    if (!result.path) {
+      showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
+      return;
+    }
+    // if (!path) {
+    //   alert("No se pueden alcanzar todos los paquetes.");
+    //   return;
+    // }
+
+    setExpandedNodes(result.expandedNodes);
+    setMaxDepth(result.maxDepth);
+    setComputationTime(endTime - startTime);
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    showCompletitionMessage("Busqueda por profundidad completa")
+  };
   
-
-
 
   return (
     <div className="container">
