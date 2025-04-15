@@ -1,4 +1,4 @@
-import { Position, GRID_SIZE } from "../Models/AlgorithmsModels";
+import { Position, GRID_SIZE, SearchMetrics } from "../Models/AlgorithmsModels";
 
 interface Node {
   position: Position;
