@@ -306,12 +306,14 @@ function App() {
               <button onClick={() => moveDrone(1, 0)}>➡️</button>
             </div>
             <div className="row">
-            <button onClick={resetMap}>Reiniciar Mapa</button>
+              <button onClick={resetMap}>Reiniciar Mapa</button>
             </div>
+            <br />
             <div className="row">
               <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
+            </div>
+            <div className="row">
               <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
-
             </div>
             <div className="row">
               <button onClick={runDepthFirstSearch}>Busqueda por profundidad</button>
