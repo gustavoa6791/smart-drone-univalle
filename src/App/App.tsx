@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
 import { GreedyBestFirstSearch } from "../Algorithms/GreedyBestFirstSearch";
+import { AStarSearch } from "../Algorithms/AStartSearch";
 import { Position, GRID_SIZE } from "../Models/AlgorithmsModels";
 import "./App.css";
 
@@ -165,7 +166,31 @@ function App() {
     }
   };
   
+  const runAStarSearch = async () => {
+    const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
   
+    if (!result) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
+    }
+  
+    // Mostrar reporte de métricas
+    alert(`Reporte de búsqueda A*:
+      Nodos expandidos: ${result.metrics.expandedNodes}
+      Profundidad del árbol: ${result.metrics.treeDepth}
+      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms`);
+  
+    // Ejecutar el movimiento
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+  };
+  
+  
+   
   
 
 
@@ -206,6 +231,8 @@ function App() {
             <div className="row">
               <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
               <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
+              <button onClick={runAStarSearch}>Búsqueda A*</button>
+
 
             </div>
           </div>
