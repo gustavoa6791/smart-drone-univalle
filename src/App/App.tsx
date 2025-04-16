@@ -186,7 +186,6 @@ function App() {
     showCompletitionMessage("Busqueda por amplitud completa")
   };
 
-
   const runUniformCostSearch = async () => {
     const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
   
@@ -207,7 +206,6 @@ function App() {
     }
   };
   
-
   const runGreedyBestFirstSearch = async () => {
     const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
 
@@ -222,41 +220,8 @@ function App() {
       Profundidad del árbol: ${result.metrics.treeDepth}
       Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
       Costo total del camino: ${result.metrics.totalCost}`);
-      
-  
-  const runDepthFirstSearch = async () => {
-    setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    setExpandedNodes(0);
-    setMaxDepth(0);
-    setComputationTime(0);
-
-    const startTime = Date.now();
-    const result = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
-    //const {path, expandedNodes, maxDepth, computationTime} = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
-
-    const endTime = Date.now()
-    if (!result.path) {
-      showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
-      return;
-    }
-    // if (!path) {
-    //   alert("No se pueden alcanzar todos los paquetes.");
-    //   return;
-    // }
-
-    setExpandedNodes(result.expandedNodes);
-    setMaxDepth(result.maxDepth);
-    setComputationTime(endTime - startTime);
-
-    for (let i = 1; i < result.path.length; i++) {
-      const dx = result.path[i].x - dronePosition.x;
-      const dy = result.path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-    }
-
-  };
-  
+        
+  }
 
   const runAStarSearch = async () => {
     const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
@@ -279,7 +244,6 @@ function App() {
       moveDrone(dx, dy);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-  };
     showCompletitionMessage("Busqueda por profundidad completa")
   };
 
