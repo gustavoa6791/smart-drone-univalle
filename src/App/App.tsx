@@ -245,7 +245,7 @@ function App() {
       moveDrone(dx, dy);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-    showCompletitionMessage("Busqueda por profundidad completa")
+    showCompletitionMessage("Busqueda por A* completa")
   };
 
   const runDepthFirstSearch = async () => {
