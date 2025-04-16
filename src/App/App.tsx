@@ -335,13 +335,15 @@ function App() {
             <br />
             <div className="row">
               <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
+            </div>
+            <div className="row">
+              <button onClick={runDepthFirstSearch}>Busqueda por profundidad</button>
+            </div>
+            <div className="row">
               <button onClick={runUniformCostSearch}>Búsqueda de Costo Uniforme</button>
             </div>
             <div className="row">
               <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
-            </div>
-            <div className="row">
-              <button onClick={runDepthFirstSearch}>Busqueda por profundidad</button>
             </div>
           </div>
           <div>
