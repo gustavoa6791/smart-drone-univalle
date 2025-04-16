@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
+import { UniformCostSearch} from "../Algorithms/UniformCostSearch";
+
 import { Position, GRID_SIZE } from "../Models/AlgorithmsModels";
 import "./App.css";
 
@@ -142,6 +144,27 @@ function App() {
     }
   };
 
+  const runUniformCostSearch = async () => {
+    const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
+  
+    if (!result.path) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
+    }
+  
+    const { path, totalCost } = result;
+  
+    console.log("Costo total:", totalCost); 
+  
+    for (let i = 1; i < path.length; i++) {
+      const dx = path[i].x - dronePosition.x;
+      const dy = path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+  };
+  
+
 
   
 
@@ -182,6 +205,7 @@ function App() {
             </div>
             <div className="row">
               <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
+              <button onClick={runUniformCostSearch}>Búsqueda de Costo Uniforme</button>
             </div>
           </div>
           <div>
