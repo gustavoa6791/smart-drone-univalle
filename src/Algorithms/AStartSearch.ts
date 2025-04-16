@@ -6,6 +6,7 @@ interface AStarResult {
     expandedNodes: number;
     treeDepth: number;
     computationTime: number;
+    totalCost: number;
   };
 }
 
@@ -59,7 +60,8 @@ export function AStarSearch(
         metrics: {
           expandedNodes,
           treeDepth,
-          computationTime
+          computationTime,
+          totalCost: current.g
         }
       };
     }
