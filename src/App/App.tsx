@@ -235,7 +235,8 @@ function App() {
     alert(`Reporte de búsqueda A*:
       Nodos expandidos: ${result.metrics.expandedNodes}
       Profundidad del árbol: ${result.metrics.treeDepth}
-      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms`);
+      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
+      Costo total: ${result.metrics.totalCost}`);
   
     // Ejecutar el movimiento
     for (let i = 1; i < result.path.length; i++) {
