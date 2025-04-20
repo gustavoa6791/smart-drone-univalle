@@ -1,5 +1,9 @@
 import { Position, DIRECTIONS, GRID_SIZE, QueueNode } from "../Models/AlgorithmsModels";
 
+// Serializa el estado de paquetes recogidos como un string único
+function serializePackages(packages: boolean[][]): string {
+  return packages.map(row => row.map(cell => (cell ? "1" : "0")).join("")).join("");
+}
 
 export function UniformCostSearch(
   grid: number[][],
@@ -7,7 +11,7 @@ export function UniformCostSearch(
   totalPackages: number
 ): { path: Position[] | null; totalCost: number } {
   const visited = new Set<string>();
-  const queue: { node: QueueNode; cost: number }[] = [];
+  const queue: { node: QueueNode & { prevPos?: Position }; cost: number }[] = [];
 
   // Inicializar matriz de paquetes recogidos
   const initialPackages = Array.from({ length: GRID_SIZE }, () =>
@@ -20,37 +24,36 @@ export function UniformCostSearch(
       pos: start,
       path: [start],
       packagesCollected: initialPackages,
-      collectedCount: 0
+      collectedCount: 0,
+      prevPos: undefined
     },
     cost: 0
   });
 
   while (queue.length > 0) {
-    // Ordenar la cola por costo ascendente (simulando una cola de prioridad)
     queue.sort((a, b) => a.cost - b.cost);
     const { node, cost } = queue.shift()!;
+    const { pos, path, packagesCollected, collectedCount, prevPos } = node;
 
-    const { pos, path, packagesCollected, collectedCount } = node;
-    const key = `${pos.x},${pos.y},${collectedCount}`;
-
+    
+    const key = `${pos.x},${pos.y},${serializePackages(packagesCollected)}`;
     if (visited.has(key)) continue;
     visited.add(key);
 
     let newPackagesCollected = packagesCollected.map(row => [...row]);
     let newCollectedCount = collectedCount;
 
-    // Si hay un paquete en esta posición y no se ha recogido
+    let pickedPackage = false;
     if (grid[pos.y][pos.x] === 4 && !packagesCollected[pos.y][pos.x]) {
       newPackagesCollected[pos.y][pos.x] = true;
       newCollectedCount += 1;
+      pickedPackage = true;
 
-      // Si ya se recogieron todos los paquetes, devolvemos el camino
       if (newCollectedCount === totalPackages) {
         return { path, totalCost: cost };
       }
     }
 
-    // Explorar vecinos
     for (const { dx, dy } of DIRECTIONS) {
       const newX = pos.x + dx;
       const newY = pos.y + dy;
@@ -58,17 +61,28 @@ export function UniformCostSearch(
       if (
         newX >= 0 && newX < GRID_SIZE &&
         newY >= 0 && newY < GRID_SIZE &&
-        grid[newY][newX] !== 1 
+        grid[newY][newX] !== 1
       ) {
-        const newCost = cost + (grid[newY][newX] === 3 ? 8 : 1); 
         const newPos = { x: newX, y: newY };
 
+        // Evitar devolverse salvo si recogió paquete
+        if (
+          prevPos &&
+          newPos.x === prevPos.x &&
+          newPos.y === prevPos.y &&
+          !pickedPackage
+        ) {
+          continue;
+        }
+
+        const newCost = cost + (grid[newY][newX] === 3 ? 8 : 1);
         queue.push({
           node: {
             pos: newPos,
             path: [...path, newPos],
             packagesCollected: newPackagesCollected.map(row => [...row]),
-            collectedCount: newCollectedCount
+            collectedCount: newCollectedCount,
+            prevPos: pos 
           },
           cost: newCost
         });
@@ -76,5 +90,5 @@ export function UniformCostSearch(
     }
   }
 
-  return { path: null, totalCost: 0 }; // No se encontró camino
+  return { path: null, totalCost: 0 };
 }
