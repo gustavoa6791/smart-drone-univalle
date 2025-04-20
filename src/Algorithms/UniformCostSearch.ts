@@ -9,16 +9,20 @@ export function UniformCostSearch(
   grid: number[][],
   start: Position,
   totalPackages: number
-): { path: Position[] | null; totalCost: number } {
+): {
+  path: Position[] | null;
+  totalCost: number;
+  nodesExpanded: number;
+  maxDepth: number;
+  computationTime: number;
+} {
   const visited = new Set<string>();
   const queue: { node: QueueNode & { prevPos?: Position }; cost: number }[] = [];
 
-  // Inicializar matriz de paquetes recogidos
   const initialPackages = Array.from({ length: GRID_SIZE }, () =>
     Array(GRID_SIZE).fill(false)
   );
 
-  // Agregar el nodo inicial
   queue.push({
     node: {
       pos: start,
@@ -30,15 +34,21 @@ export function UniformCostSearch(
     cost: 0
   });
 
+  const startTime = performance.now();
+  let nodesExpanded = 0;
+  let maxDepth = 0;
+
   while (queue.length > 0) {
     queue.sort((a, b) => a.cost - b.cost);
     const { node, cost } = queue.shift()!;
     const { pos, path, packagesCollected, collectedCount, prevPos } = node;
 
-    
     const key = `${pos.x},${pos.y},${serializePackages(packagesCollected)}`;
     if (visited.has(key)) continue;
     visited.add(key);
+
+    nodesExpanded++;
+    maxDepth = Math.max(maxDepth, path.length - 1);
 
     let newPackagesCollected = packagesCollected.map(row => [...row]);
     let newCollectedCount = collectedCount;
@@ -50,7 +60,14 @@ export function UniformCostSearch(
       pickedPackage = true;
 
       if (newCollectedCount === totalPackages) {
-        return { path, totalCost: cost };
+        const endTime = performance.now();
+        return {
+          path,
+          totalCost: cost,
+          nodesExpanded,
+          maxDepth,
+          computationTime: endTime - startTime
+        };
       }
     }
 
@@ -65,7 +82,6 @@ export function UniformCostSearch(
       ) {
         const newPos = { x: newX, y: newY };
 
-        // Evitar devolverse salvo si recogió paquete
         if (
           prevPos &&
           newPos.x === prevPos.x &&
@@ -82,7 +98,7 @@ export function UniformCostSearch(
             path: [...path, newPos],
             packagesCollected: newPackagesCollected.map(row => [...row]),
             collectedCount: newCollectedCount,
-            prevPos: pos 
+            prevPos: pos
           },
           cost: newCost
         });
@@ -90,5 +106,12 @@ export function UniformCostSearch(
     }
   }
 
-  return { path: null, totalCost: 0 };
+  const endTime = performance.now();
+  return {
+    path: null,
+    totalCost: 0,
+    nodesExpanded,
+    maxDepth,
+    computationTime: endTime - startTime
+  };
 }
