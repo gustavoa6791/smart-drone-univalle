@@ -310,7 +310,7 @@ function App() {
 
   return (
     <div className="container">
-      <h2>Smart Drone 🚁</h2>
+      <h2><img src="/icono_univalle.ico" alt="" /> Smart Drone 🚁 </h2>
       <div className="sub-contaioner">
         <div className="grid">
           {grid.map((row, y) =>
