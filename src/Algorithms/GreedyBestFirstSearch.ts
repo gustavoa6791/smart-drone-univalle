@@ -26,10 +26,7 @@ export function GreedyBestFirstSearch(
 
   while (packagesRemaining > 0) {
     const result = findNextPackage(remainingGrid, currentPosition);
-    console.log("Nodos explorados para el primer paquete:", result.expandedNodes);
-    console.log("Profundidad máxima alcanzada:", result.depth);
-    console.log("Costo del camino:", result.cost);
-
+    
     if (!result || !result.path) {
       const endTime = performance.now();
       return {
@@ -45,7 +42,7 @@ export function GreedyBestFirstSearch(
 
     expandedNodes += result.expandedNodes;
     maxDepth = Math.max(maxDepth, result.depth);
-    totalCost += result.cost;  // Se suma el costo del camino al costo total
+    totalCost += result.cost;
     completePath = completePath.concat(result.path.slice(1));
     currentPosition = result.path[result.path.length - 1];
     remainingGrid[currentPosition.y][currentPosition.x] = 0;
@@ -120,7 +117,7 @@ function findNextPackage(grid: number[][], start: Position): {
         f: heuristic(move, grid),
         path: newPath,
         depth: current.depth + 1,
-        cost: newCost //Se guarda el costo acumulado en el nod
+        cost: newCost
       };
 
       const existingNode = openSet.find(
@@ -134,6 +131,7 @@ function findNextPackage(grid: number[][], start: Position): {
           existingNode.f = newNode.f;
           existingNode.parent = current;
           existingNode.path = newPath;
+          existingNode.cost = newCost;
         }
       }
     }
@@ -147,15 +145,42 @@ function findNextPackage(grid: number[][], start: Position): {
   };
 }
 
-// Función heurística: distancia Manhattan al paquete más cercano
+// Función heurística mejorada: distancia Manhattan al paquete más cercano considerando obstáculos
 function heuristic(position: Position, grid: number[][]): number {
   let minDistance = Infinity;
   
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
       if (grid[y][x] === 4) {
+        // Calcular distancia Manhattan
         const distance = Math.abs(position.x - x) + Math.abs(position.y - y);
-        minDistance = Math.min(minDistance, distance);
+        
+        // Verificar si hay obstáculos en el camino
+        let hasObstacle = false;
+        const minX = Math.min(position.x, x);
+        const maxX = Math.max(position.x, x);
+        const minY = Math.min(position.y, y);
+        const maxY = Math.max(position.y, y);
+        
+        // Verificar obstáculos en el camino horizontal
+        for (let i = minX; i <= maxX; i++) {
+          if (grid[position.y][i] === 1) {
+            hasObstacle = true;
+            break;
+          }
+        }
+        
+        // Verificar obstáculos en el camino vertical
+        for (let i = minY; i <= maxY; i++) {
+          if (grid[i][position.x] === 1) {
+            hasObstacle = true;
+            break;
+          }
+        }
+        
+        // Si hay obstáculos, aumentar la distancia estimada
+        const adjustedDistance = hasObstacle ? distance * 1.5 : distance;
+        minDistance = Math.min(minDistance, adjustedDistance);
       }
     }
   }

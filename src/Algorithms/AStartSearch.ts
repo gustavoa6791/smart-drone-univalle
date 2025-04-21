@@ -50,7 +50,7 @@ export function AStarSearch(
     const current = open.shift()!;
 
     expandedNodes++;
-    treeDepth = Math.max(treeDepth, current.path.length);
+    treeDepth = Math.max(treeDepth, current.path.length - 1);
 
     if (current.collectedCount === totalPackages) {
       const endTime = performance.now();

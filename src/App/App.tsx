@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
-import { UniformCostSearch} from "../Algorithms/UniformCostSearch";
+import { UniformCostSearch } from "../Algorithms/UniformCostSearch";
 import { GreedyBestFirstSearch } from "../Algorithms/GreedyBestFirstSearch";
 import { AStarSearch } from "../Algorithms/AStartSearch";
 import { DepthFirstSearch } from "../Algorithms/DepthFirstSearch";
@@ -25,7 +25,7 @@ const ICONS: Record<number, string> = {
 
 // Estado inicial del mundo (en texto)
 const defaultWorld =
-`1 1 0 0 0 0 0 1 1 1
+  `1 1 0 0 0 0 0 1 1 1
 1 1 0 1 0 1 0 1 1 1
 0 2 0 3 4 4 0 0 0 0
 0 1 1 1 0 1 1 1 1 0
@@ -74,10 +74,16 @@ function App() {
     initialBase.flat().filter((cell) => cell === 4).length
   );
 
+  useEffect(() => {
+    const packs = grid.flat().filter(n => n === 4).length;
+    setPackagesLeft(packs);
+  }, [grid]);
+
   const [completionMessage, setCompletionMessage] = useState<string>("");
   const [expandedNodes, setExpandedNodes] = useState<number>(0);
   const [maxDepth, setMaxDepth] = useState<number>(0);
   const [computationtime, setComputationTime] = useState<number>(0);
+  
 
 
   //Funcion para reiniciar el mapa
@@ -91,7 +97,7 @@ function App() {
 
     // Actualiza todos los estados relacionados
     setInputText(defaultWorld);
-    setInputKey(Date.now()); 
+    setInputKey(Date.now());
     setBaseGrid(newBase);
     setGrid(newGrid);
     setDronePosition(startPos);
@@ -119,7 +125,7 @@ function App() {
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
-  
+
 
   //funcion para mostrar un mensaje de finalizacion
   const showCompletitionMessage = (message: string) => {
@@ -145,7 +151,10 @@ function App() {
 
 
   // Función para mover el dron
-  const moveDrone = (currentPosition:Position, newPosition: Position) => {
+  const moveDrone = (currentPosition: Position, newPosition: Position) => {
+    // Actualizar el costo según el tipo de celda
+    const newCellCost = baseGrid[newPosition.y][newPosition.x] === 3 ? 8 : 1;
+    setCost(prevCost => prevCost + newCellCost);
 
     setGrid((prev) => {
       const next = prev.map((r) => [...r]);
@@ -156,8 +165,8 @@ function App() {
     setGrid((prev) => {
       const next = prev.map((r) => [...r]);
       if (baseGrid[currentPosition.y][currentPosition.x] == 3) {
-        next[currentPosition.y][currentPosition.x] = baseGrid[currentPosition.y][currentPosition.x] ;
-      }else{
+        next[currentPosition.y][currentPosition.x] = baseGrid[currentPosition.y][currentPosition.x];
+      } else {
         next[currentPosition.y][currentPosition.x] = 0;
       }
       return next;
@@ -169,16 +178,29 @@ function App() {
   };
 
 
+ //ALGORITMO DE BUSQUEDA POR AMPLITUD
   const runBreadthFirstSearch = async () => {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    setCost(0); // Reiniciar el costo a 0
+    setExpandedNodes(0);
+    setMaxDepth(0);
+    setComputationTime(0);
 
-    const { path } = result;
+    const startTime = Date.now();
+    const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    const endTime = Date.now();
+
+    const { path, extendedNodes, treeDepth, executionTime } = result;
 
     if (!path.length) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
       return;
     }
+
+    // Actualizar las métricas
+    setExpandedNodes(extendedNodes);
+    setMaxDepth(treeDepth);
+    setComputationTime(executionTime);
 
     let start = dronePosition;
 
@@ -189,16 +211,29 @@ function App() {
     showCompletitionMessage("Busqueda por amplitud completa")
   };
 
-
+ //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD POR COSTO
   const runUniformCostSearch = async () => {
-    const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
+    setCompletionMessage(""); //limpia el mensaje antes de iniciar
+    setCost(0); // Reiniciar el costo a 0
+    setExpandedNodes(0);
+    setMaxDepth(0);
+    setComputationTime(0);
 
-    const { path, totalCost } = result;
+    const startTime = Date.now();
+    const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
+    const endTime = Date.now();
+
+    const { path, nodesExpanded, maxDepth, computationTime } = result;
 
     if (!path?.length) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
     }
+
+    // Actualizar las métricas
+    setExpandedNodes(nodesExpanded);
+    setMaxDepth(maxDepth);
+    setComputationTime(computationTime);
 
     let start = dronePosition;
 
@@ -207,25 +242,31 @@ function App() {
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    // Display metrics
-    /* alert(`Reporte de búsqueda:
-      Nodos expandidos: ${result.nodesExpanded}
-      Profundidad del árbol: ${result.maxDepth}
-      Tiempo de cómputo: ${result.computationTime.toFixed(2)}ms
-      Costo total del camino: ${result.totalCost}`); */
-
+    showCompletitionMessage("Búsqueda por Costo Uniforme completa");
   };
 
 
+ //ALGORITMO DE BUSQUEDA AVARA
   const runGreedyBestFirstSearch = async () => {
+    setCompletionMessage(""); //limpia el mensaje antes de iniciar
+    setCost(0); // Reiniciar el costo a 0
+    setExpandedNodes(0);
+    setMaxDepth(0);
+    setComputationTime(0);
+
     const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
 
-    const { path, metrics} = result;
+    const { path, metrics } = result;
 
     if (!path?.length) {
-      alert("No se pueden alcanzar todos los paquetes.");
+      showCompletitionMessage("No se pueden alcanzar todos los paquetes.");
       return;
     }
+
+    // Actualizar las métricas en la interfaz
+    setExpandedNodes(metrics.expandedNodes);
+    setMaxDepth(metrics.treeDepth);
+    setComputationTime(metrics.computationTime);
 
     let start = dronePosition;
 
@@ -234,64 +275,59 @@ function App() {
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    // Display metrics
-    /* alert(`Reporte de búsqueda:
-      Nodos expandidos: ${result.metrics.expandedNodes}
-      Profundidad del árbol: ${result.metrics.treeDepth}
-      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
-      Costo total del camino: ${result.metrics.totalCost}`); */
-
-  }
+    showCompletitionMessage("Búsqueda Avara completa");
+  };
 
 
+ //ALGORITMO DE BUSQUEDA A*
   const runAStarSearch = async () => {
+    // Reiniciar todas las métricas al inicio
+    setCompletionMessage("");
+    setCost(0);
+    
+    // Obtener el resultado de A* primero
     const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
 
     if (!result) {
-      alert("No se pueden alcanzar todos los paquetes.");
-      return;
+        showCompletitionMessage("No se pueden alcanzar todos los paquetes.");
+        return;
     }
+
+    // Actualizar inmediatamente todas las métricas antes de mover el dron
+    setExpandedNodes(result.metrics.expandedNodes);
+    setMaxDepth(result.metrics.treeDepth);
+    setComputationTime(result.metrics.computationTime);
 
     let start = dronePosition;
 
+    // Mover el dron y actualizar el costo paso a paso
     for (let i = 1; i < result.path.length; i++) {
-      start = moveDrone(start, result.path[i]);
-      await new Promise((resolve) => setTimeout(resolve, 600));
+        start = moveDrone(start, result.path[i]);
+        await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    // Mostrar reporte de métricas
-    /* alert(`Reporte de búsqueda A*:
-      Nodos expandidos: ${result.metrics.expandedNodes}
-      Profundidad del árbol: ${result.metrics.treeDepth}
-      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
-      Costo total: ${result.metrics.totalCost}`); */
-
-    // Ejecutar el movimiento
-
-    showCompletitionMessage("Busqueda por A* completa")
+    showCompletitionMessage("Búsqueda por A* completa");
   };
 
 
+ //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD
   const runDepthFirstSearch = async () => {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
+    setCost(0); // Reiniciar el costo a 0
     setExpandedNodes(0);
     setMaxDepth(0);
     setComputationTime(0);
 
     const startTime = Date.now();
     const result = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
-    //const {path, expandedNodes, maxDepth, computationTime} = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    const endTime = Date.now();
 
-    const endTime = Date.now()
     if (!result.path) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
       return;
     }
-    // if (!path) {
-    //   alert("No se pueden alcanzar todos los paquetes.");
-    //   return;
-    // }
 
+    // Actualizar las métricas
     setExpandedNodes(result.expandedNodes);
     setMaxDepth(result.maxDepth);
     setComputationTime(endTime - startTime);
@@ -307,6 +343,9 @@ function App() {
   };
 
   const [activeTab, setActiveTab] = useState("noInformada");
+
+
+
 
   return (
     <div className="container">
@@ -405,7 +444,7 @@ function App() {
                 rows={11}
                 cols={21}
                 style={{ resize: "none" }}
-              ></textarea>              
+              ></textarea>
             </div>
             <div>
 
