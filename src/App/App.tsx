@@ -102,7 +102,6 @@ function App() {
   //funcion para mostrar un mensaje de finalizacion
   const showCompletitionMessage = (message: string) => {
     setCompletionMessage(message);
-    
   }
   // Función para mover el dron
   const moveDrone = (dx: number, dy: number) => {
@@ -131,7 +130,7 @@ function App() {
       }
       newBaseGrid[newY][newX] = 0; // Eliminar el paquete del mundo base
     }
-  
+
     // Si la nueva celda tiene un paquete, el dron lo recoge:
     // if (newBaseGrid[newY][newX] === 4) {
     //   setPackagesLeft((prev) => prev - 1);
@@ -168,7 +167,7 @@ function App() {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
 
-    const {path} = result;
+    const { path } = result;
 
     if (!path.length) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
@@ -187,16 +186,16 @@ function App() {
 
   const runUniformCostSearch = async () => {
     const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
-  
+
     if (!result.path) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
     }
-  
+
     const { path, totalCost } = result;
-  
+
     //console.log("Costo total:", totalCost); 
-  
+
     for (let i = 1; i < path.length; i++) {
       const dx = path[i].x - dronePosition.x;
       const dy = path[i].y - dronePosition.y;
@@ -212,7 +211,7 @@ function App() {
       Costo total del camino: ${result.totalCost}`); */
 
   };
-  
+
   const runGreedyBestFirstSearch = async () => {
     const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
 
@@ -234,24 +233,24 @@ function App() {
       Profundidad del árbol: ${result.metrics.treeDepth}
       Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
       Costo total del camino: ${result.metrics.totalCost}`); */
-        
+
   }
 
   const runAStarSearch = async () => {
     const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
-  
+
     if (!result) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
     }
-  
+
     // Mostrar reporte de métricas
     /* alert(`Reporte de búsqueda A*:
       Nodos expandidos: ${result.metrics.expandedNodes}
       Profundidad del árbol: ${result.metrics.treeDepth}
       Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
       Costo total: ${result.metrics.totalCost}`); */
-  
+
     // Ejecutar el movimiento
     for (let i = 1; i < result.path.length; i++) {
       const dx = result.path[i].x - dronePosition.x;
@@ -293,17 +292,12 @@ function App() {
     }
     showCompletitionMessage("Busqueda por profundidad completa")
   };
-  
+
+  const [activeTab, setActiveTab] = useState("noInformada");
 
   return (
     <div className="container">
       <h2>Smart Drone 🚁</h2>
-      <p>Coste actual: {cost}</p>
-      <p>Paquetes restantes: {packagesLeft}</p>
-      <p>Nodos expandidos: {expandedNodes}</p>
-      <p>Profundidad maxima: {maxDepth}</p>
-      <p>Tiempo de computo: {computationtime}</p>
-      {completionMessage && <p className="completion-message">{completionMessage}</p>}
       <div className="sub-contaioner">
         <div className="grid">
           {grid.map((row, y) =>
@@ -324,6 +318,8 @@ function App() {
         </div>
         <div className="world">
           <div className="controls">
+
+            {/* 
             <div className="row">
               <button onClick={() => moveDrone(0, -1)}>⬆️</button>
             </div>
@@ -331,37 +327,91 @@ function App() {
               <button onClick={() => moveDrone(-1, 0)}>⬅️</button>
               <button onClick={() => moveDrone(0, 1)}>⬇️</button>
               <button onClick={() => moveDrone(1, 0)}>➡️</button>
+            </div> 
+            */}
+
+            <div className="container-tabs">
+              <div className="tabs">
+                <button
+                  className={activeTab === "noInformada" ? "tab active" : "tab"}
+                  onClick={() => setActiveTab("noInformada")}
+                >
+                  Búsqueda No Informada
+                </button>
+                <button
+                  className={activeTab === "informada" ? "tab active" : "tab"}
+                  onClick={() => setActiveTab("informada")}
+                >
+                  Búsqueda Informada
+                </button>
+              </div>
+
+              {/* Botones según la pestaña activa */}
+              {activeTab === "noInformada" && (
+                <>
+                  <div className="row">
+                    <button onClick={runBreadthFirstSearch}>Búsqueda por Amplitud</button>
+                  </div>
+                  <div className="row">
+                    <button onClick={runDepthFirstSearch}>Búsqueda por Profundidad</button>
+                  </div>
+                  <div className="row">
+                    <button onClick={runUniformCostSearch}>Búsqueda de Costo Uniforme</button>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "informada" && (
+                <>
+                  <div className="row">
+                    <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
+                  </div>
+                  <div className="row">
+                    <button onClick={runAStarSearch}>Búsqueda A*</button>
+                  </div>
+                </>
+              )}
+
             </div>
-            <div className="row">
-              <button onClick={resetMap}>Reiniciar Mapa</button>
+
+            <div>
+              <p>Coste actual: {cost}</p>
+              <p>Paquetes restantes: {packagesLeft}</p>
+              <p>Nodos expandidos: {expandedNodes}</p>
+              <p>Profundidad maxima: {maxDepth}</p>
+              <p>Tiempo de computo: {computationtime}</p>
+              {completionMessage && <p className="completion-message">{completionMessage}</p>}
             </div>
-            <br />
-            <div className="row">
-              <button onClick={runBreadthFirstSearch}>Busqueda por Amplitud</button>
-            </div>
-            <div className="row">
-              <button onClick={runDepthFirstSearch}>Busqueda por profundidad</button>
-            </div>
-            <div className="row">
-              <button onClick={runUniformCostSearch}>Búsqueda de Costo Uniforme</button>
-            </div>
-            <div className="row">
-              <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
-            </div>
-            <div className="row">
-              <button onClick={runAStarSearch}>Búsqueda A*</button>
-            </div>
+
+
+
+
+
           </div>
-          <div>
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              rows={15}
-              cols={30}
-              style={{ resize: "none" }}
-            ></textarea>
-            <br />
-            <button onClick={generateWorld}>Generar Mundo</button>
+          <div className="generate">
+            <div>
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                rows={11}
+                cols={21}
+                style={{ resize: "none" }}
+              ></textarea>              
+            </div>
+            <div>
+
+              <div className="row">
+                <button onClick={generateWorld}>Subir archivo</button>
+              </div>
+              <div className="row">
+                <button onClick={generateWorld}>Generar Mundo</button>
+              </div>
+
+              <div className="row">
+                <button onClick={resetMap}>Reiniciar Mapa</button>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>

@@ -7,7 +7,6 @@
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
-  align-items: center;
 }
 
 .grid {
@@ -17,6 +16,7 @@
   gap: 2px;
   margin: 20px auto;
   width: fit-content;
+  height: fit-content;
   background-color: #ddd;
   padding: 5px;
   border-radius: 5px;
@@ -55,7 +55,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20%;
+  margin-bottom: 10px;
 }
 
 .row {
@@ -65,7 +65,8 @@
 }
 
 button {
-  padding: 15px 20px;
+  margin: 3px 0;
+  padding: 10px 12px;
   font-size: 22px;
   cursor: pointer;
   border: none;
@@ -89,12 +90,48 @@ textarea {
   background-color: #ffef0c;
 }
 
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.tab {
+  padding: 0.5em 1em;
+  border: none;
+  background: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.tab.active {
+  background: #666;
+  color: white;
+}
+
+.container-tabs{
+  min-height: 30vh;
+}
+
+.generate{
+  display: flex;
+
+  justify-content: space-around;
+
+}
+
 /* Diseño responsivo para móviles */
 @media (max-width: 600px) {
   .sub-contaioner {
     flex-direction: column;
     align-items: center;
   }
+
+
+.container-tabs{
+  min-height: 35vh;
+}
 
   .grid {
     grid-template-columns: repeat(10, 35px);
@@ -112,7 +149,7 @@ textarea {
   }
 
   button {
-    font-size: 26px;
+    font-size: 18px;
     padding: 15px;
   }
 
