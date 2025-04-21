@@ -6,6 +6,29 @@ export interface Position {
     y: number;
 }
 
+export interface Direction {
+    dx: number;
+    dy: number;
+}
+
+export interface Node{
+    position: Position,
+    path: Position[],
+    directions: Direction[],
+    cost: number,
+    remainingPacks: number,
+    collectedPacks: Set<string>
+}
+
+export interface Response {
+    path: Position[],
+    directions: Direction[],
+    extendedNodes: number,
+    treeDepth: number,
+    executionTime: number,
+    totalCost: number
+  }
+
 export interface SearchMetrics {
     expandedNodes: number;
     treeDepth: number;

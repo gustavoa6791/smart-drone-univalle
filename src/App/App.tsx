@@ -55,7 +55,7 @@ function App() {
 
   const startPos = findDroneStart(initialBase); //pos inicial del dron
   initialBase[startPos.y][startPos.x] = 0;
-  console.log(startPos); 
+  //console.log(startPos); 
   const [baseGrid, setBaseGrid] = useState<number[][]>(initialBase);
 
   const [grid, setGrid] = useState<number[][]>(() => {
@@ -166,16 +166,15 @@ function App() {
 
   const runBreadthFirstSearch = async () => {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    const path = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
 
-    if (!path) {
+    const {path} = result;
+
+    if (!path.length) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
       return;
     }
-    // if (!path) {
-    //   alert("No se pueden alcanzar todos los paquetes.");
-    //   return;
-    // }
+
 
     for (let i = 1; i < path.length; i++) {
       const dx = path[i].x - dronePosition.x;
@@ -196,7 +195,7 @@ function App() {
   
     const { path, totalCost } = result;
   
-    console.log("Costo total:", totalCost); 
+    //console.log("Costo total:", totalCost); 
   
     for (let i = 1; i < path.length; i++) {
       const dx = path[i].x - dronePosition.x;
@@ -206,11 +205,11 @@ function App() {
     }
 
     // Display metrics
-    alert(`Reporte de búsqueda:
+    /* alert(`Reporte de búsqueda:
       Nodos expandidos: ${result.nodesExpanded}
       Profundidad del árbol: ${result.maxDepth}
       Tiempo de cómputo: ${result.computationTime.toFixed(2)}ms
-      Costo total del camino: ${result.totalCost}`);
+      Costo total del camino: ${result.totalCost}`); */
 
   };
   
@@ -222,12 +221,19 @@ function App() {
       return;
     }
 
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+
     // Display metrics
-    alert(`Reporte de búsqueda:
+    /* alert(`Reporte de búsqueda:
       Nodos expandidos: ${result.metrics.expandedNodes}
       Profundidad del árbol: ${result.metrics.treeDepth}
       Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
-      Costo total del camino: ${result.metrics.totalCost}`);
+      Costo total del camino: ${result.metrics.totalCost}`); */
         
   }
 
@@ -240,11 +246,11 @@ function App() {
     }
   
     // Mostrar reporte de métricas
-    alert(`Reporte de búsqueda A*:
+    /* alert(`Reporte de búsqueda A*:
       Nodos expandidos: ${result.metrics.expandedNodes}
       Profundidad del árbol: ${result.metrics.treeDepth}
       Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
-      Costo total: ${result.metrics.totalCost}`);
+      Costo total: ${result.metrics.totalCost}`); */
   
     // Ejecutar el movimiento
     for (let i = 1; i < result.path.length; i++) {

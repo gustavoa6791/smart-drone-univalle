@@ -1,73 +1,91 @@
-import { Position, DIRECTIONS, GRID_SIZE, QueueNode } from "../Models/AlgorithmsModels";
+import { Position, Node, DIRECTIONS, GRID_SIZE, Response, Direction } from "../Models/AlgorithmsModels";
 
 export function BreadthFirstSearch(
-  grid: number[][],
-  start: Position,
-  totalPackages: number
-): Position[] | null {
+  matriz: number[][],
+  posInit: Position,
+  packs: number,
+): Response {
 
-  //inicial
-  const initialCollected = Array.from({ length: GRID_SIZE }, () =>
-    Array(GRID_SIZE).fill(false)
-  );
+  const start = performance.now();
 
-  const queue: QueueNode[] = [{
-    pos: start,
-    path: [start],
-    packagesCollected: initialCollected,
-    collectedCount: 0
-  }];
+  const queueNode: Node[] = [{
+    position: posInit,
+    path: [posInit],
+    directions: [{dx:0,dy:0}],
+    remainingPacks: packs,
+    collectedPacks: new Set(),
+    cost: 0
+  }]
 
-  const visited = new Set<string>();
-  visited.add(`${start.x},${start.y}|0`);
+  const visitedNode = new Set<string>();
+  let extendedNodes: number = 0;
+  let maxDepth: number = 0;
+  let finalPath: Position[] = [];
+  let finalDirections: Direction[] = [];
+  let totalCost: number = 0;
 
-  while (queue.length > 0) {
-    const { pos, path, packagesCollected, collectedCount } = queue.shift()!;
+  while (queueNode.length > 0) {
 
-    //retornar si se recogieron todos los paquetes
-    if (collectedCount === totalPackages) {
-      return path;
+    const { position, path, remainingPacks, collectedPacks, cost , directions} = queueNode.shift()!;
+
+    extendedNodes++;
+    maxDepth = Math.max(maxDepth, path.length - 1);
+
+    if (remainingPacks === 0) {
+      finalPath = path;
+      totalCost = cost;
+      finalDirections = directions
+      break;
     }
 
     for (const { dx, dy } of DIRECTIONS) {
 
-      //agregar direccion a la posicion actual
-      const newX = pos.x + dx;
-      const newY = pos.y + dy;
+      const newX = position.x + dx;
+      const newY = position.y + dy;
 
-      //es obstaculo o  esta fuera de la matriz
       if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) continue;
-      if (grid[newY][newX] === 1) continue;
+      if (matriz[newY][newX] === 1) continue;
 
-      //actualizar variables
-      const newPos: Position = { x: newX, y: newY };
-      const newCollected = cloneCollectedMatrix(packagesCollected);
-      let newCount = collectedCount;
+      var newRemainingPacks = remainingPacks;
+      const newCollectedPacks = new Set(collectedPacks);
+      const key = `${newX}${newY}`;
 
-      //recoger paquete
-      if (grid[newY][newX] === 4 && !newCollected[newY][newX]) {
-        newCollected[newY][newX] = true;
-        newCount++;
+      if (matriz[newY][newX] === 4 && !collectedPacks.has(key)) {
+        newRemainingPacks = remainingPacks - 1
+        newCollectedPacks.add(key);
       }
 
-      //agregar si se visito 
-      const visitedKey = `${newX},${newY}|${newCount}`;
-      if (visited.has(visitedKey)) continue;
-      visited.add(visitedKey);
+      const posKey = `${newX}${newY}-${newRemainingPacks}-${Array.from(newCollectedPacks).join('|')}`;
 
-      //agragar expansion
-      queue.push({
-        pos: newPos,
+      if (visitedNode.has(posKey)) continue;
+
+      const newPos: Position = { x: newX, y: newY }
+      const newDir: Direction = { dx: dx, dy: dy }
+
+      queueNode.push({
+        position: newPos,
         path: [...path, newPos],
-        packagesCollected: newCollected,
-        collectedCount: newCount
-      });
+        directions: [...directions, newDir],
+        remainingPacks: newRemainingPacks,
+        collectedPacks: newCollectedPacks,
+        cost: cost + 1
+      })
+
+      visitedNode.add(posKey);
     }
   }
 
-  return null;
-}
+  const end = performance.now();
 
-function cloneCollectedMatrix(matrix: boolean[][]): boolean[][] {
-  return matrix.map(row => [...row]);
+
+  const response: Response = {
+    path: finalPath,
+    directions: finalDirections,
+    extendedNodes: extendedNodes,
+    treeDepth: maxDepth,
+    executionTime: end - start,
+    totalCost: totalCost
+  }
+
+  return response
 }
