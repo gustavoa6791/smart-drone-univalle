@@ -125,48 +125,6 @@ function App() {
   const showCompletitionMessage = (message: string) => {
     setCompletionMessage(message);
   }
-  // Función para mover el dron
-  const moveDrone = (dx: number, dy: number) => {
-    const newX = dronePosition.x + dx;
-    const newY = dronePosition.y + dy;
-
-    //validar que no salga de la cuadricula ni pase por obstaculos
-    if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) return; //no puede salir de la cuadricula
-    if (grid[newY][newX] === 1) return; // No puede pasar por obstáculos
-
-    // Consultamos la celda en el baseGrid para determinar el costo
-    const cellValue = baseGrid[newY][newX];
-    const costDelta = cellValue === 3 ? 8 : 1;
-    const newCost = cost + costDelta;
-
-    // Clonamos grid y baseGrid
-    const newGrid = grid.map((row) => [...row]);
-    const newBaseGrid = baseGrid.map((row) => [...row]);
-
-    // Restaurar la celda de la posición anterior según el baseGrid
-    newGrid[dronePosition.y][dronePosition.x] = baseGrid[dronePosition.y][dronePosition.x];
-
-    if (newBaseGrid[newY][newX] === 4) {
-      if (packagesLeft > 0) { // Asegurarse de que packagesLeft no sea menor que 0
-        setPackagesLeft((prev) => Math.max(0, prev - 1)); // Limitar el decremento
-      }
-      newBaseGrid[newY][newX] = 0; // Eliminar el paquete del mundo base
-    }
-
-    // Si la nueva celda tiene un paquete, el dron lo recoge:
-    // if (newBaseGrid[newY][newX] === 4) {
-    //   setPackagesLeft((prev) => prev - 1);
-    //   newBaseGrid[newY][newX] = 0; // Se elimina el paquete del mundo base
-    // }
-
-    // Colocar el dron en la nueva posición
-    newGrid[newY][newX] = 2;
-
-    setDronePosition({ x: newX, y: newY });
-    setGrid(newGrid);
-    setBaseGrid(newBaseGrid);
-    setCost(newCost);
-  };
 
   // Función para generar un nuevo mundo a partir del textarea
   const generateWorld = () => {
@@ -185,6 +143,32 @@ function App() {
     setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
   };
 
+
+  // Función para mover el dron
+  const moveDrone = (currentPosition:Position, newPosition: Position) => {
+
+    setGrid((prev) => {
+      const next = prev.map((r) => [...r]);
+      next[newPosition.y][newPosition.x] = 2;
+      return next;
+    });
+
+    setGrid((prev) => {
+      const next = prev.map((r) => [...r]);
+      if (baseGrid[currentPosition.y][currentPosition.x] == 3) {
+        next[currentPosition.y][currentPosition.x] = baseGrid[currentPosition.y][currentPosition.x] ;
+      }else{
+        next[currentPosition.y][currentPosition.x] = 0;
+      }
+      return next;
+    });
+
+    setDronePosition(newPosition);
+
+    return newPosition;
+  };
+
+
   const runBreadthFirstSearch = async () => {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
@@ -196,32 +180,30 @@ function App() {
       return;
     }
 
+    let start = dronePosition;
 
     for (let i = 1; i < path.length; i++) {
-      const dx = path[i].x - dronePosition.x;
-      const dy = path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
+      start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
     showCompletitionMessage("Busqueda por amplitud completa")
   };
 
+
   const runUniformCostSearch = async () => {
     const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
 
-    if (!result.path) {
+    const { path, totalCost } = result;
+
+    if (!path?.length) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
     }
 
-    const { path, totalCost } = result;
-
-    //console.log("Costo total:", totalCost); 
+    let start = dronePosition;
 
     for (let i = 1; i < path.length; i++) {
-      const dx = path[i].x - dronePosition.x;
-      const dy = path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
+      start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
@@ -234,18 +216,21 @@ function App() {
 
   };
 
+
   const runGreedyBestFirstSearch = async () => {
     const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
 
-    if (!result.path) {
+    const { path, metrics} = result;
+
+    if (!path?.length) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
     }
 
-    for (let i = 1; i < result.path.length; i++) {
-      const dx = result.path[i].x - dronePosition.x;
-      const dy = result.path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
+    let start = dronePosition;
+
+    for (let i = 1; i < path.length; i++) {
+      start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
@@ -258,12 +243,20 @@ function App() {
 
   }
 
+
   const runAStarSearch = async () => {
     const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
 
     if (!result) {
       alert("No se pueden alcanzar todos los paquetes.");
       return;
+    }
+
+    let start = dronePosition;
+
+    for (let i = 1; i < result.path.length; i++) {
+      start = moveDrone(start, result.path[i]);
+      await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
     // Mostrar reporte de métricas
@@ -274,14 +267,10 @@ function App() {
       Costo total: ${result.metrics.totalCost}`); */
 
     // Ejecutar el movimiento
-    for (let i = 1; i < result.path.length; i++) {
-      const dx = result.path[i].x - dronePosition.x;
-      const dy = result.path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-    }
+
     showCompletitionMessage("Busqueda por A* completa")
   };
+
 
   const runDepthFirstSearch = async () => {
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
@@ -306,12 +295,14 @@ function App() {
     setExpandedNodes(result.expandedNodes);
     setMaxDepth(result.maxDepth);
     setComputationTime(endTime - startTime);
+
+    let start = dronePosition;
+
     for (let i = 1; i < result.path.length; i++) {
-      const dx = result.path[i].x - dronePosition.x;
-      const dy = result.path[i].y - dronePosition.y;
-      moveDrone(dx, dy);
+      start = moveDrone(start, result.path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
+
     showCompletitionMessage("Busqueda por profundidad completa")
   };
 
@@ -404,12 +395,8 @@ function App() {
               <p>Tiempo de computo: {computationtime}</p>
               {completionMessage && <p className="completion-message">{completionMessage}</p>}
             </div>
-
-
-
-
-
           </div>
+
           <div className="generate">
             <div>
               <textarea
@@ -450,5 +437,3 @@ function App() {
 }
 
 export default App;
-
-
