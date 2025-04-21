@@ -1,4 +1,4 @@
-import { use, useState } from "react";
+import { useRef, useState } from "react";
 import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
 import { UniformCostSearch} from "../Algorithms/UniformCostSearch";
 import { GreedyBestFirstSearch } from "../Algorithms/GreedyBestFirstSearch";
@@ -48,7 +48,9 @@ const findDroneStart = (grid: number[][]): Position => { //la funcion devuelve u
 
 function App() {
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputText, setInputText] = useState(defaultWorld);
+  const [inputKey, setInputKey] = useState(Date.now());
 
   //convierte el defaultWorld en una matriz bidimensional 
   const initialBase = parseGrid(defaultWorld);
@@ -88,6 +90,8 @@ function App() {
     newGrid[startPos.y][startPos.x] = 2; // Coloca el dron en la posición inicial en la nueva cuadrícula
 
     // Actualiza todos los estados relacionados
+    setInputText(defaultWorld);
+    setInputKey(Date.now()); 
     setBaseGrid(newBase);
     setGrid(newGrid);
     setDronePosition(startPos);
@@ -98,6 +102,24 @@ function App() {
     setMaxDepth(0);
     setComputationTime(0);
   };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      setInputText(text);
+    };
+    reader.readAsText(file);
+    setInputKey(Date.now());
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+  
 
   //funcion para mostrar un mensaje de finalizacion
   const showCompletitionMessage = (message: string) => {
@@ -401,7 +423,15 @@ function App() {
             <div>
 
               <div className="row">
-                <button onClick={generateWorld}>Subir archivo</button>
+                <button onClick={triggerFileInput}>📁 Subir archivo</button>
+                <input
+                  key={inputKey}
+                  type="file"
+                  accept=".txt"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  style={{ display: "none" }}
+                />
               </div>
               <div className="row">
                 <button onClick={generateWorld}>Generar Mundo</button>
