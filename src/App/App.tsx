@@ -208,7 +208,7 @@ function App() {
       start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-    showCompletitionMessage("Busqueda por amplitud completa")
+    showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD COMPLETA</b>")
   };
 
  //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD POR COSTO
@@ -242,7 +242,7 @@ function App() {
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("Búsqueda por Costo Uniforme completa");
+    showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME COMPLETA</b>");
   };
 
 
@@ -275,7 +275,7 @@ function App() {
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("Búsqueda Avara completa");
+    showCompletitionMessage("<b>BÚSQUEDA AVARA COMPLETA</b>");
   };
 
 
@@ -306,7 +306,7 @@ function App() {
         await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("Búsqueda por A* completa");
+    showCompletitionMessage("<b>BÚSQUEDA POR A* COMPLETA</b>");
   };
 
 
@@ -339,7 +339,7 @@ function App() {
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("Busqueda por profundidad completa")
+    showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD COMPLETA</b>")
   };
 
   const [activeTab, setActiveTab] = useState("noInformada");
@@ -349,7 +349,7 @@ function App() {
 
   return (
     <div className="container">
-      <h2><img src="/icono_univalle.ico" alt="" /> Smart Drone 🚁 </h2>
+      <h1><img src="/icono_univalle.ico" alt="" /> Smart Drone 🚁 </h1>
       <div className="sub-contaioner">
         <div className="grid">
           {grid.map((row, y) =>
@@ -427,12 +427,12 @@ function App() {
             </div>
 
             <div>
-              <p>Coste actual: {cost}</p>
-              <p>Paquetes restantes: {packagesLeft}</p>
-              <p>Nodos expandidos: {expandedNodes}</p>
-              <p>Profundidad maxima: {maxDepth}</p>
-              <p>Tiempo de computo: {computationtime}</p>
-              {completionMessage && <p className="completion-message">{completionMessage}</p>}
+              <p><b>Coste actual:</b> {cost}</p>
+              <p><b>Paquetes restantes:</b> {packagesLeft}</p>
+              <p><b>Nodos expandidos:</b> {expandedNodes}</p>
+              <p><b>Profundidad maxima:</b> {maxDepth}</p>
+              <p><b>Tiempo de computo:</b> {computationtime}</p>
+              {completionMessage && <p className="completion-message" dangerouslySetInnerHTML={{ __html: completionMessage }}></p>}
             </div>
           </div>
 
@@ -449,7 +449,7 @@ function App() {
             <div>
 
               <div className="row">
-                <button onClick={triggerFileInput}>📁 Subir archivo</button>
+                <button className="control-button" onClick={triggerFileInput}>📁 Subir archivo</button>
                 <input
                   key={inputKey}
                   type="file"
@@ -460,11 +460,11 @@ function App() {
                 />
               </div>
               <div className="row">
-                <button onClick={generateWorld}>Generar Mundo</button>
+                <button className="control-button" onClick={generateWorld}>Generar Mundo</button>
               </div>
 
               <div className="row">
-                <button onClick={resetMap}>Reiniciar Mapa</button>
+                <button className="control-button" onClick={resetMap}>Reiniciar Mapa</button>
               </div>
 
             </div>

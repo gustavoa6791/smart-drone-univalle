@@ -54,7 +54,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+
   margin-bottom: 10px;
 }
 
@@ -62,6 +62,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
+ 
 }
 
 button {
@@ -70,21 +71,29 @@ button {
   font-size: 22px;
   cursor: pointer;
   border: none;
-  background: #007bff;
-  color: white;
+  background: #88b5e6;
+  color: black;
   border-radius: 5px;
   transition: background 0.2s;
 }
 
 button:hover {
-  background: #0056b3;
+  background: #4f94df;
+}
+
+.control-button {
+  background: #a75a02;
+  color: black;
+}
+
+.control-button:hover {
+  background: #cf7c1c;
 }
 
 textarea {
   resize: none;
 }
 
-.cell.drone {}
 
 .cell.drone-electromagnetic {
   background-color: #ffef0c;
@@ -98,20 +107,25 @@ textarea {
 
 .tab {
   padding: 0.5em 1em;
-  border: none;
-  background: #ccc;
+  background: #858383;
   cursor: pointer;
   border-radius: 5px;
   font-weight: bold;
+  transition: background 0.2s;
+}
+
+.tab:hover {
+  background: #cf7c1c;
+  color: black;
 }
 
 .tab.active {
-  background: #666;
-  color: white;
+  background: #a75a02;
+  color: black;
 }
 
 .container-tabs{
-  min-height: 30vh;
+  min-height: 20vh;
 }
 
 .generate{
@@ -130,7 +144,7 @@ textarea {
 
 
 .container-tabs{
-  min-height: 35vh;
+  min-height: 25vh;
 }
 
   .grid {
