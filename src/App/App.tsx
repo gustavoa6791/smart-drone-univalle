@@ -204,6 +204,14 @@ function App() {
       moveDrone(dx, dy);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
+
+    // Display metrics
+    alert(`Reporte de búsqueda:
+      Nodos expandidos: ${result.nodesExpanded}
+      Profundidad del árbol: ${result.maxDepth}
+      Tiempo de cómputo: ${result.computationTime.toFixed(2)}ms
+      Costo total del camino: ${result.totalCost}`);
+
   };
   
   const runGreedyBestFirstSearch = async () => {
