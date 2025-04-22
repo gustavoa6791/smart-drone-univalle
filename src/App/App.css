@@ -46,7 +46,7 @@
 }
 
 .world {
-  margin: 20px auto;
+  margin: 20px 0;
   text-align: center;
 }
 
@@ -125,7 +125,7 @@ textarea {
 }
 
 .container-tabs{
-  min-height: 20vh;
+  min-height: 230px;
 }
 
 .generate{
@@ -144,7 +144,7 @@ textarea {
 
 
 .container-tabs{
-  min-height: 25vh;
+  min-height: 260px;
 }
 
   .grid {
@@ -170,4 +170,28 @@ textarea {
   p{
     margin: 0;
   }
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ccc; 
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 10px;
+}
+
+.result-table th,
+.result-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: middle; 
+  text-align: left; 
+  min-width: 70px;
+}
+
+.result-table th {
+  background-color: #f9f9f9;
+  font-weight: bold;
 }

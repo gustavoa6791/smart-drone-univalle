@@ -42,6 +42,7 @@ export interface QueueNode {
     path: Position[]; //arreglo con el camino recorrido
     packagesCollected: boolean[][]; //para saber si recogio los paquetes
     collectedCount: number; //contador con el numero total de paquetes recogidos
+    cost: number;
   }
 
 // Se expanden en las 4 direcciones: derecha, izquierda, arriba y abajo.

@@ -7,6 +7,7 @@ export function DepthFirstSearch(
 ): {path: Position[] | null; 
     expandedNodes: number;
     maxDepth: number;
+    totalCost: number;
     //computationTime: number
 } {
 
@@ -19,6 +20,7 @@ export function DepthFirstSearch(
         Array(GRID_SIZE).fill(false)
       ),
       collectedCount: 0,
+      cost: 0
     },
   ];
 
@@ -28,19 +30,20 @@ export function DepthFirstSearch(
 
   let expandedNodes = 0; //contador de nodos
   let maxDepth = 0 //profundidad maxima
+  let totalCost = 0;
 
   //const startTime = Date.now() //tiempo de inicio del algoritmo
 
   while (stack.length > 0) {
     // Obtener el nodo actual
-    const { pos, path, packagesCollected, collectedCount } = stack.pop()!;
+    const { pos, path, packagesCollected, collectedCount, cost } = stack.pop()!;
     expandedNodes++; //incrementar nodos expandidos 
     maxDepth = Math.max(maxDepth, path.length); //actualizar la profundidad
-
+    totalCost = cost
     // Retornar si se han recogido todos los paquetes
     if (collectedCount === totalPackages) {
       //const computationTime = Date.now() - startTime; //tiempo total de ejecución
-      return { path, expandedNodes, maxDepth}
+      return { path, expandedNodes, maxDepth, totalCost}
     }
 
     // Explorar vecinos
@@ -68,17 +71,26 @@ export function DepthFirstSearch(
       if (visited.has(visitedKey)) continue;
       visited.add(visitedKey);
 
+      let newCost = cost;
+
+      if (grid[newY][newX] === 3) {
+        newCost += 8
+      }else{
+        newCost += 1
+      }
+
       // Agregar el nodo a la pila
       stack.push({
         pos: newPos,
         path: [...path, newPos],
         packagesCollected: newCollected,
         collectedCount: newCount,
+        cost: newCost
       });
     }
   }
   //const computationTime = Date.now() - startTime;
-  return {path:null, expandedNodes, maxDepth};
+  return {path:null, expandedNodes, maxDepth, totalCost};
 }
 
 function cloneCollectedMatrix(matrix: boolean[][]): boolean[][] {

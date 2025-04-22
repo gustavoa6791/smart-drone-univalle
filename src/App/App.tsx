@@ -69,6 +69,7 @@ function App() {
   const [dronePosition, setDronePosition] = useState<Position>(startPos);
 
   const [cost, setCost] = useState(0);
+  const [totalCost, setTotalCost] = useState(0);
 
   const [packagesLeft, setPackagesLeft] = useState(
     initialBase.flat().filter((cell) => cell === 4).length
@@ -104,6 +105,7 @@ function App() {
     setGrid(newGrid);
     setDronePosition(startPos);
     setCost(0);
+    setTotalCost(0);
     setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
     setCompletionMessage(""); // Limpia cualquier mensaje anterior
     setExpandedNodes(0);
@@ -149,6 +151,7 @@ function App() {
     setGrid(newGrid);
     setDronePosition(startPos);
     setCost(0);
+    setTotalCost(0);
     setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
   };
 
@@ -186,6 +189,7 @@ function App() {
     stopFlag.current = false;
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     setCost(0); // Reiniciar el costo a 0
+    setTotalCost(0)
     setExpandedNodes(0);
     setMaxDepth(0);
     setComputationTime(0);
@@ -194,7 +198,7 @@ function App() {
     const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
     const endTime = Date.now();
 
-    const { path, extendedNodes, treeDepth, executionTime } = result;
+    const { path, extendedNodes, treeDepth, executionTime ,totalCost} = result;
 
     if (!path.length) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
@@ -205,6 +209,7 @@ function App() {
     setExpandedNodes(extendedNodes);
     setMaxDepth(treeDepth);
     setComputationTime(executionTime);
+    setTotalCost(totalCost);
 
     let start = dronePosition;
 
@@ -233,7 +238,7 @@ function App() {
     const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
     const endTime = Date.now();
 
-    const { path, nodesExpanded, maxDepth, computationTime } = result;
+    const { path, nodesExpanded, maxDepth, computationTime, totalCost } = result;
 
     if (!path?.length) {
       alert("No se pueden alcanzar todos los paquetes.");
@@ -244,6 +249,7 @@ function App() {
     setExpandedNodes(nodesExpanded);
     setMaxDepth(maxDepth);
     setComputationTime(computationTime);
+    setTotalCost(totalCost)
 
     let start = dronePosition;
 
@@ -283,6 +289,7 @@ function App() {
     setExpandedNodes(metrics.expandedNodes);
     setMaxDepth(metrics.treeDepth);
     setComputationTime(metrics.computationTime);
+    setTotalCost(metrics.totalCost)
 
     let start = dronePosition;
 
@@ -319,6 +326,7 @@ function App() {
     setExpandedNodes(result.metrics.expandedNodes);
     setMaxDepth(result.metrics.treeDepth);
     setComputationTime(result.metrics.computationTime);
+    setTotalCost(result.metrics.totalCost);
 
     let start = dronePosition;
 
@@ -359,6 +367,7 @@ function App() {
     setExpandedNodes(result.expandedNodes);
     setMaxDepth(result.maxDepth);
     setComputationTime(endTime - startTime);
+    setTotalCost(result.totalCost)
 
     let start = dronePosition;
 
@@ -381,23 +390,29 @@ function App() {
     <div className="container">
       <h1><img src="/icono_univalle.ico" alt="" /> Smart Drone 🚁 </h1>
       <div className="sub-contaioner">
-        <div className="grid">
-          {grid.map((row, y) =>
-            row.map((cell, x) => {
-              const isDrone = dronePosition.x === x && dronePosition.y === y;
-              const cellClass = isDrone
-                ? baseGrid[y][x] === 3
-                  ? "drone-electromagnetic"
-                  : "drone"
-                : "";
-              return (
-                <div key={`${x}-${y}`} className={`cell ${cellClass}`}>
-                  {isDrone ? "🚁" : ICONS[cell] || ""}
-                </div>
-              );
-            })
-          )}
+        <div>
+          <div className="grid">
+            {grid.map((row, y) =>
+              row.map((cell, x) => {
+                const isDrone = dronePosition.x === x && dronePosition.y === y;
+                const cellClass = isDrone
+                  ? baseGrid[y][x] === 3
+                    ? "drone-electromagnetic"
+                    : "drone"
+                  : "";
+                return (
+                  <div key={`${x}-${y}`} className={`cell ${cellClass}`}>
+                    {isDrone ? "🚁" : ICONS[cell] || ""}
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <div>
+            {completionMessage && <p className="completion-message" dangerouslySetInnerHTML={{ __html: completionMessage }}></p>}
+          </div>
         </div>
+
         <div className="world">
           <div className="controls">
 
@@ -457,12 +472,21 @@ function App() {
             </div>
 
             <div>
-              <p><b>Coste actual:</b> {cost}</p>
-              <p><b>Paquetes restantes:</b> {packagesLeft}</p>
-              <p><b>Nodos expandidos:</b> {expandedNodes}</p>
-              <p><b>Profundidad maxima:</b> {maxDepth}</p>
-              <p><b>Tiempo de computo:</b> {computationtime}</p>
-              {completionMessage && <p className="completion-message" dangerouslySetInnerHTML={{ __html: completionMessage }}></p>}
+              <table className="result-table">
+                <tbody>
+                  <tr><td><b>Coste actual:</b> </td><td>{cost}</td></tr>
+                  <tr><td><b>Paquetes restantes:</b> </td><td>{packagesLeft}</td></tr> 
+                </tbody>
+              </table>
+
+              <table className="result-table">
+                <tbody>
+                  <tr><td><b>Costo total:</b></td><td>{totalCost}</td></tr>
+                  <tr><td><b>Nodos expandidos:</b></td><td>{expandedNodes}</td></tr>
+                  <tr><td><b>Profundidad maxima:</b></td><td>{maxDepth}</td></tr>
+                  <tr><td><b>Tiempo de computo:</b></td><td>{computationtime.toFixed(2) } Seg.</td></tr>                  
+                </tbody>
+              </table>
             </div>
           </div>
 

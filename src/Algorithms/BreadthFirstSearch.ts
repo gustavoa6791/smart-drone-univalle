@@ -62,13 +62,21 @@ export function BreadthFirstSearch(
       const newPos: Position = { x: newX, y: newY }
       const newDir: Direction = { dx: dx, dy: dy }
 
+      let newCost = cost;
+
+      if (matriz[newY][newX] === 3) {
+        newCost += 8
+      }else{
+        newCost += 1
+      }
+
       queueNode.push({
         position: newPos,
         path: [...path, newPos],
         directions: [...directions, newDir],
         remainingPacks: newRemainingPacks,
         collectedPacks: newCollectedPacks,
-        cost: cost + 1
+        cost: newCost
       })
 
       visitedNode.add(posKey);
