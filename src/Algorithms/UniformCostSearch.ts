@@ -29,7 +29,8 @@ export function UniformCostSearch(
       path: [start],
       packagesCollected: initialPackages,
       collectedCount: 0,
-      prevPos: undefined
+      prevPos: undefined,
+      cost: 0
     },
     cost: 0
   });
@@ -98,7 +99,8 @@ export function UniformCostSearch(
             path: [...path, newPos],
             packagesCollected: newPackagesCollected.map(row => [...row]),
             collectedCount: newCollectedCount,
-            prevPos: pos
+            prevPos: pos,
+            cost: 0
           },
           cost: newCost
         });
