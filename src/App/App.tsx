@@ -83,11 +83,13 @@ function App() {
   const [expandedNodes, setExpandedNodes] = useState<number>(0);
   const [maxDepth, setMaxDepth] = useState<number>(0);
   const [computationtime, setComputationTime] = useState<number>(0);
-  
+
+  const stopFlag = useRef(false);
 
 
   //Funcion para reiniciar el mapa
   const resetMap = () => {
+    stopFlag.current = true;
     const newBase = parseGrid(defaultWorld); // Restablece el mundo al valor predeterminado
     const startPos = findDroneStart(newBase); // Encuentra la posición inicial del dron
     newBase[startPos.y][startPos.x] = 0; // Quita el dron de la matriz base
@@ -134,6 +136,7 @@ function App() {
 
   // Función para generar un nuevo mundo a partir del textarea
   const generateWorld = () => {
+    stopFlag.current = true;
     const newBase = parseGrid(inputText);
 
     const startPos = findDroneStart(newBase);
@@ -180,6 +183,7 @@ function App() {
 
  //ALGORITMO DE BUSQUEDA POR AMPLITUD
   const runBreadthFirstSearch = async () => {
+    stopFlag.current = false;
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     setCost(0); // Reiniciar el costo a 0
     setExpandedNodes(0);
@@ -205,14 +209,20 @@ function App() {
     let start = dronePosition;
 
     for (let i = 1; i < path.length; i++) {
+      if (stopFlag.current) break;
       start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-    showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD COMPLETA</b>")
+    if (stopFlag.current) {
+      showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD DETENIDA</b>")
+    }else{
+      showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD COMPLETA</b>")
+    }
   };
 
  //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD POR COSTO
   const runUniformCostSearch = async () => {
+    stopFlag.current = false;
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     setCost(0); // Reiniciar el costo a 0
     setExpandedNodes(0);
@@ -238,16 +248,22 @@ function App() {
     let start = dronePosition;
 
     for (let i = 1; i < path.length; i++) {
+      if (stopFlag.current) break;
       start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME COMPLETA</b>");
+    if (stopFlag.current) {
+      showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME DETENIDA</b>")
+    }else{
+      showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME COMPLETA</b>")
+    }
   };
 
 
  //ALGORITMO DE BUSQUEDA AVARA
   const runGreedyBestFirstSearch = async () => {
+    stopFlag.current = false;
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     setCost(0); // Reiniciar el costo a 0
     setExpandedNodes(0);
@@ -271,16 +287,22 @@ function App() {
     let start = dronePosition;
 
     for (let i = 1; i < path.length; i++) {
+      if (stopFlag.current) break;
       start = moveDrone(start, path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("<b>BÚSQUEDA AVARA COMPLETA</b>");
+    if (stopFlag.current) {
+      showCompletitionMessage("<b>BÚSQUEDA POR AVARA DETENIDA</b>")
+    }else{
+      showCompletitionMessage("<b>BÚSQUEDA POR AVARA COMPLETA</b>")
+    }
   };
 
 
  //ALGORITMO DE BUSQUEDA A*
   const runAStarSearch = async () => {
+    stopFlag.current = false;
     // Reiniciar todas las métricas al inicio
     setCompletionMessage("");
     setCost(0);
@@ -302,16 +324,22 @@ function App() {
 
     // Mover el dron y actualizar el costo paso a paso
     for (let i = 1; i < result.path.length; i++) {
+      if (stopFlag.current) break;
         start = moveDrone(start, result.path[i]);
         await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("<b>BÚSQUEDA POR A* COMPLETA</b>");
+    if (stopFlag.current) {
+      showCompletitionMessage("<b>BÚSQUEDA POR A* DETENIDA</b>")
+    }else{
+      showCompletitionMessage("<b>BÚSQUEDA POR A* COMPLETA</b>")
+    }
   };
 
 
  //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD
   const runDepthFirstSearch = async () => {
+    stopFlag.current = false;
     setCompletionMessage(""); //limpia el mensaje antes de iniciar
     setCost(0); // Reiniciar el costo a 0
     setExpandedNodes(0);
@@ -335,17 +363,19 @@ function App() {
     let start = dronePosition;
 
     for (let i = 1; i < result.path.length; i++) {
+      if (stopFlag.current) break;
       start = moveDrone(start, result.path[i]);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
 
-    showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD COMPLETA</b>")
+    if (stopFlag.current) {
+      showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD DETENIDA</b>")
+    }else{
+      showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD COMPLETA</b>")
+    }
   };
 
   const [activeTab, setActiveTab] = useState("noInformada");
-
-
-
 
   return (
     <div className="container">
