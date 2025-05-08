@@ -21,7 +21,7 @@ export function GreedyBestFirstSearch(
   
   let currentPosition = start;
   let completePath: Position[] = [start];
-  let remainingGrid = grid.map(row => [...row]);
+  const remainingGrid = grid.map(row => [...row]);
   let packagesRemaining = packagesLeft;
 
   while (packagesRemaining > 0) {

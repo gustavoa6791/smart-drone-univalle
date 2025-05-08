@@ -51,7 +51,7 @@ export function UniformCostSearch(
     nodesExpanded++;
     maxDepth = Math.max(maxDepth, path.length - 1);
 
-    let newPackagesCollected = packagesCollected.map(row => [...row]);
+    const newPackagesCollected = packagesCollected.map(row => [...row]);
     let newCollectedCount = collectedCount;
 
     let pickedPackage = false;

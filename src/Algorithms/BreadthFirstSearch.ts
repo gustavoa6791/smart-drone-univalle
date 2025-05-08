@@ -46,7 +46,7 @@ export function BreadthFirstSearch(
       if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) continue;
       if (matriz[newY][newX] === 1) continue;
 
-      var newRemainingPacks = remainingPacks;
+      let newRemainingPacks = remainingPacks;
       const newCollectedPacks = new Set(collectedPacks);
       const key = `${newX}${newY}`;
 

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { BreadthFirstSearch } from "../Algorithms/BreadthFirstSearch";
 import { UniformCostSearch } from "../Algorithms/UniformCostSearch";
 import { GreedyBestFirstSearch } from "../Algorithms/GreedyBestFirstSearch";
@@ -8,15 +8,38 @@ import { DepthFirstSearch } from "../Algorithms/DepthFirstSearch";
 import { Position, GRID_SIZE } from "../Models/AlgorithmsModels";
 import "./App.css";
 
+// Definición de tipos para los resultados de búsqueda
+interface SearchMetrics {
+  expandedNodes: number;
+  treeDepth: number;
+  computationTime: number;
+  totalCost: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface SearchResult {
+  path: Position[];
+  metrics: SearchMetrics;
+}
+
+interface DepthFirstSearchResult {
+  path: Position[];
+  expandedNodes: number;
+  maxDepth: number;
+  totalCost: number;
+}
 
 // Función para convertir texto en matriz
 const parseGrid = (text: string): number[][] => {
-  return text.trim().split("\n").map((row) => row.split(" ").map(Number));
+  return text
+    .trim()
+    .split("\n")
+    .map((row) => row.split(" ").map(Number));
 };
 
 // Iconos para representar el mundo
 const ICONS: Record<number, string> = {
-  0: "",   // Espacio libre
+  0: "", // Espacio libre
   1: "⬛", // Obstáculo
   2: "🚁", // Dron
   3: "⚡", // Campo electromagnético
@@ -24,8 +47,7 @@ const ICONS: Record<number, string> = {
 };
 
 // Estado inicial del mundo (en texto)
-const defaultWorld =
-  `1 1 0 0 0 0 0 1 1 1
+const defaultWorld = `1 1 0 0 0 0 0 1 1 1
 1 1 0 1 0 1 0 1 1 1
 0 2 0 3 4 4 0 0 0 0
 0 1 1 1 0 1 1 1 1 0
@@ -37,27 +59,20 @@ const defaultWorld =
 1 1 1 1 1 1 1 1 1 1`;
 
 // Función para encontrar la posición inicial del dron
-const findDroneStart = (grid: number[][]): Position => { //la funcion devuelve un objeto de tipo position
+const findDroneStart = (grid: number[][]): Position => {
   for (let y = 0; y < GRID_SIZE; y++) {
     for (let x = 0; x < GRID_SIZE; x++) {
-      if (grid[y][x] === 2) return { x, y }; //si el valor de la celda en la posicion es igual al 2
+      if (grid[y][x] === 2) return { x, y };
     }
   }
-  return { x: 0, y: 0 }; //valor por defecto
+  return { x: 0, y: 0 };
 };
 
 function App() {
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputText, setInputText] = useState(defaultWorld);
-  const [inputKey, setInputKey] = useState(Date.now());
-
-  //convierte el defaultWorld en una matriz bidimensional 
   const initialBase = parseGrid(defaultWorld);
-
-  const startPos = findDroneStart(initialBase); //pos inicial del dron
+  const startPos = findDroneStart(initialBase);
   initialBase[startPos.y][startPos.x] = 0;
-  //console.log(startPos); 
   const [baseGrid, setBaseGrid] = useState<number[][]>(initialBase);
 
   const [grid, setGrid] = useState<number[][]>(() => {
@@ -67,356 +82,228 @@ function App() {
   });
 
   const [dronePosition, setDronePosition] = useState<Position>(startPos);
-
   const [cost, setCost] = useState(0);
-  const [totalCost, setTotalCost] = useState(0);
-
   const [packagesLeft, setPackagesLeft] = useState(
     initialBase.flat().filter((cell) => cell === 4).length
   );
-
-  useEffect(() => {
-    const packs = grid.flat().filter(n => n === 4).length;
-    setPackagesLeft(packs);
-  }, [grid]);
-
   const [completionMessage, setCompletionMessage] = useState<string>("");
   const [expandedNodes, setExpandedNodes] = useState<number>(0);
   const [maxDepth, setMaxDepth] = useState<number>(0);
-  const [computationtime, setComputationTime] = useState<number>(0);
+  const [computationTime, setComputationTime] = useState<number>(0);
 
-  const stopFlag = useRef(false);
-
-
-  //Funcion para reiniciar el mapa
+  // Función para reiniciar el mapa
   const resetMap = () => {
-    stopFlag.current = true;
-    const newBase = parseGrid(defaultWorld); // Restablece el mundo al valor predeterminado
-    const startPos = findDroneStart(newBase); // Encuentra la posición inicial del dron
-    newBase[startPos.y][startPos.x] = 0; // Quita el dron de la matriz base
-
-    const newGrid = newBase.map((row) => [...row]); // Crea una copia de la cuadrícula
-    newGrid[startPos.y][startPos.x] = 2; // Coloca el dron en la posición inicial en la nueva cuadrícula
-
-    // Actualiza todos los estados relacionados
-    setInputText(defaultWorld);
-    setInputKey(Date.now());
-    setBaseGrid(newBase);
-    setGrid(newGrid);
-    setDronePosition(startPos);
-    setCost(0);
-    setTotalCost(0);
-    setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
-    setCompletionMessage(""); // Limpia cualquier mensaje anterior
-    setExpandedNodes(0);
-    setMaxDepth(0);
-    setComputationTime(0);
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      setInputText(text);
-    };
-    reader.readAsText(file);
-    setInputKey(Date.now());
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-
-  //funcion para mostrar un mensaje de finalizacion
-  const showCompletitionMessage = (message: string) => {
-    setCompletionMessage(message);
-  }
-
-  // Función para generar un nuevo mundo a partir del textarea
-  const generateWorld = () => {
-    stopFlag.current = true;
-    const newBase = parseGrid(inputText);
-
+    const newBase = parseGrid(defaultWorld);
     const startPos = findDroneStart(newBase);
-    newBase[startPos.y][startPos.x] = 0; // Eliminar el marcador del dron del base
+    newBase[startPos.y][startPos.x] = 0;
 
     const newGrid = newBase.map((row) => [...row]);
-    newGrid[startPos.y][startPos.x] = 2; // Colocar el dron en la posición inicial en grid
+    newGrid[startPos.y][startPos.x] = 2;
 
     setBaseGrid(newBase);
     setGrid(newGrid);
     setDronePosition(startPos);
     setCost(0);
-    setTotalCost(0);
+    setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
+    setCompletionMessage("");
+    setExpandedNodes(0);
+    setMaxDepth(0);
+    setComputationTime(0);
+  };
+
+  const showCompletitionMessage = (message: string) => {
+    setCompletionMessage(message);
+  };
+
+  // Función para mover el dron
+  const moveDrone = (dx: number, dy: number) => {
+    const newX = dronePosition.x + dx;
+    const newY = dronePosition.y + dy;
+
+    if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) return;
+    if (grid[newY][newX] === 1) return;
+
+    const cellValue = baseGrid[newY][newX];
+    const costDelta = cellValue === 3 ? 8 : 1;
+    const newCost = cost + costDelta;
+
+    const newGrid = grid.map((row) => [...row]);
+    const newBaseGrid = baseGrid.map((row) => [...row]);
+
+    newGrid[dronePosition.y][dronePosition.x] =
+      baseGrid[dronePosition.y][dronePosition.x];
+
+    if (newBaseGrid[newY][newX] === 4) {
+      if (packagesLeft > 0) {
+        setPackagesLeft((prev) => Math.max(0, prev - 1));
+      }
+      newBaseGrid[newY][newX] = 0;
+    }
+
+    newGrid[newY][newX] = 2;
+
+    setDronePosition({ x: newX, y: newY });
+    setGrid(newGrid);
+    setBaseGrid(newBaseGrid);
+    setCost(newCost);
+  };
+
+  // Función para generar un nuevo mundo
+  const generateWorld = () => {
+    const newBase = parseGrid(inputText);
+    const startPos = findDroneStart(newBase);
+    newBase[startPos.y][startPos.x] = 0;
+
+    const newGrid = newBase.map((row) => [...row]);
+    newGrid[startPos.y][startPos.x] = 2;
+
+    setBaseGrid(newBase);
+    setGrid(newGrid);
+    setDronePosition(startPos);
+    setCost(0);
     setPackagesLeft(newBase.flat().filter((cell) => cell === 4).length);
   };
 
-
-  // Función para mover el dron
-  const moveDrone = (currentPosition: Position, newPosition: Position) => {
-    // Actualizar el costo según el tipo de celda
-    const newCellCost = baseGrid[newPosition.y][newPosition.x] === 3 ? 8 : 1;
-    setCost(prevCost => prevCost + newCellCost);
-
-    setGrid((prev) => {
-      const next = prev.map((r) => [...r]);
-      next[newPosition.y][newPosition.x] = 2;
-      return next;
-    });
-
-    setGrid((prev) => {
-      const next = prev.map((r) => [...r]);
-      if (baseGrid[currentPosition.y][currentPosition.x] == 3) {
-        next[currentPosition.y][currentPosition.x] = baseGrid[currentPosition.y][currentPosition.x];
-      } else {
-        next[currentPosition.y][currentPosition.x] = 0;
-      }
-      return next;
-    });
-
-    setDronePosition(newPosition);
-
-    return newPosition;
-  };
-
-
- //ALGORITMO DE BUSQUEDA POR AMPLITUD
   const runBreadthFirstSearch = async () => {
-    stopFlag.current = false;
-    setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    setCost(0); // Reiniciar el costo a 0
-    setTotalCost(0)
-    setExpandedNodes(0);
-    setMaxDepth(0);
-    setComputationTime(0);
-
-    const startTime = Date.now();
+    setCompletionMessage("");
     const result = BreadthFirstSearch(baseGrid, dronePosition, packagesLeft);
-    const endTime = Date.now();
 
-    const { path, extendedNodes, treeDepth, executionTime ,totalCost} = result;
-
-    if (!path.length) {
-      showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
-      return;
-    }
-
-    // Actualizar las métricas
-    setExpandedNodes(extendedNodes);
-    setMaxDepth(treeDepth);
-    setComputationTime(executionTime);
-    setTotalCost(totalCost);
-
-    let start = dronePosition;
-
-    for (let i = 1; i < path.length; i++) {
-      if (stopFlag.current) break;
-      start = moveDrone(start, path[i]);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-    }
-    if (stopFlag.current) {
-      showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD DETENIDA</b>")
-    }else{
-      showCompletitionMessage("<b>BÚSQUEDA POR AMPLITUD COMPLETA</b>")
-    }
-  };
-
- //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD POR COSTO
-  const runUniformCostSearch = async () => {
-    stopFlag.current = false;
-    setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    setCost(0); // Reiniciar el costo a 0
-    setExpandedNodes(0);
-    setMaxDepth(0);
-    setComputationTime(0);
-
-    const startTime = Date.now();
-    const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
-    const endTime = Date.now();
-
-    const { path, nodesExpanded, maxDepth, computationTime, totalCost } = result;
-
-    if (!path?.length) {
-      alert("No se pueden alcanzar todos los paquetes.");
-      return;
-    }
-
-    // Actualizar las métricas
-    setExpandedNodes(nodesExpanded);
-    setMaxDepth(maxDepth);
-    setComputationTime(computationTime);
-    setTotalCost(totalCost)
-
-    let start = dronePosition;
-
-    for (let i = 1; i < path.length; i++) {
-      if (stopFlag.current) break;
-      start = moveDrone(start, path[i]);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-    }
-
-    if (stopFlag.current) {
-      showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME DETENIDA</b>")
-    }else{
-      showCompletitionMessage("<b>BÚSQUEDA POR COSTO UNIFORME COMPLETA</b>")
-    }
-  };
-
-
- //ALGORITMO DE BUSQUEDA AVARA
-  const runGreedyBestFirstSearch = async () => {
-    stopFlag.current = false;
-    setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    setCost(0); // Reiniciar el costo a 0
-    setExpandedNodes(0);
-    setMaxDepth(0);
-    setComputationTime(0);
-
-    const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
-
-    const { path, metrics } = result;
-
-    if (!path?.length) {
+    if (!result || !result.path) {
       showCompletitionMessage("No se pueden alcanzar todos los paquetes.");
       return;
     }
 
-    // Actualizar las métricas en la interfaz
-    setExpandedNodes(metrics.expandedNodes);
-    setMaxDepth(metrics.treeDepth);
-    setComputationTime(metrics.computationTime);
-    setTotalCost(metrics.totalCost)
-
-    let start = dronePosition;
-
-    for (let i = 1; i < path.length; i++) {
-      if (stopFlag.current) break;
-      start = moveDrone(start, path[i]);
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-
-    if (stopFlag.current) {
-      showCompletitionMessage("<b>BÚSQUEDA POR AVARA DETENIDA</b>")
-    }else{
-      showCompletitionMessage("<b>BÚSQUEDA POR AVARA COMPLETA</b>")
-    }
+    showCompletitionMessage("Búsqueda por amplitud completa");
   };
 
+  const runUniformCostSearch = async () => {
+    const result = UniformCostSearch(baseGrid, dronePosition, packagesLeft);
 
- //ALGORITMO DE BUSQUEDA A*
+    if (!result || !result.path) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
+    }
+
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    showCompletitionMessage("Búsqueda de costo uniforme completa");
+  };
+
+  const runGreedyBestFirstSearch = async () => {
+    const result = GreedyBestFirstSearch(baseGrid, dronePosition, packagesLeft);
+
+    if (!result || !result.path) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
+    }
+
+    alert(`Reporte de búsqueda:
+      Nodos expandidos: ${result.metrics.expandedNodes}
+      Profundidad del árbol: ${result.metrics.treeDepth}
+      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
+      Costo total del camino: ${result.metrics.totalCost}`);
+
+    for (let i = 1; i < result.path.length; i++) {
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    showCompletitionMessage("Búsqueda voraz completa");
+  };
+
   const runAStarSearch = async () => {
-    stopFlag.current = false;
-    // Reiniciar todas las métricas al inicio
-    setCompletionMessage("");
-    setCost(0);
-    
-    // Obtener el resultado de A* primero
     const result = AStarSearch(baseGrid, dronePosition, packagesLeft);
 
-    if (!result) {
-        showCompletitionMessage("No se pueden alcanzar todos los paquetes.");
-        return;
+    if (!result || !result.path) {
+      alert("No se pueden alcanzar todos los paquetes.");
+      return;
     }
 
-    // Actualizar inmediatamente todas las métricas antes de mover el dron
-    setExpandedNodes(result.metrics.expandedNodes);
-    setMaxDepth(result.metrics.treeDepth);
-    setComputationTime(result.metrics.computationTime);
-    setTotalCost(result.metrics.totalCost);
+    alert(`Reporte de búsqueda A*:
+      Nodos expandidos: ${result.metrics.expandedNodes}
+      Profundidad del árbol: ${result.metrics.treeDepth}
+      Tiempo de cómputo: ${result.metrics.computationTime.toFixed(2)}ms
+      Costo Total: ${result.metrics.totalCost}`);
 
-    let start = dronePosition;
-
-    // Mover el dron y actualizar el costo paso a paso
     for (let i = 1; i < result.path.length; i++) {
-      if (stopFlag.current) break;
-        start = moveDrone(start, result.path[i]);
-        await new Promise((resolve) => setTimeout(resolve, 600));
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
+      await new Promise((resolve) => setTimeout(resolve, 600));
     }
-
-    if (stopFlag.current) {
-      showCompletitionMessage("<b>BÚSQUEDA POR A* DETENIDA</b>")
-    }else{
-      showCompletitionMessage("<b>BÚSQUEDA POR A* COMPLETA</b>")
-    }
+    showCompletitionMessage("Búsqueda A* completa");
   };
 
-
- //ALGORITMO DE BUSQUEDA POR PROFUNDIDAD
   const runDepthFirstSearch = async () => {
-    stopFlag.current = false;
-    setCompletionMessage(""); //limpia el mensaje antes de iniciar
-    setCost(0); // Reiniciar el costo a 0
+    setCompletionMessage("");
     setExpandedNodes(0);
     setMaxDepth(0);
     setComputationTime(0);
 
     const startTime = Date.now();
-    const result = DepthFirstSearch(baseGrid, dronePosition, packagesLeft);
+    const result = DepthFirstSearch(baseGrid, dronePosition, packagesLeft) as DepthFirstSearchResult | null;
     const endTime = Date.now();
 
-    if (!result.path) {
-      showCompletitionMessage("No se pueden alcanzar todos los paquetes.")
+    if (!result || !result.path) {
+      showCompletitionMessage("No se pueden alcanzar todos los paquetes.");
       return;
     }
 
-    // Actualizar las métricas
     setExpandedNodes(result.expandedNodes);
     setMaxDepth(result.maxDepth);
     setComputationTime(endTime - startTime);
-    setTotalCost(result.totalCost)
-
-    let start = dronePosition;
 
     for (let i = 1; i < result.path.length; i++) {
-      if (stopFlag.current) break;
-      start = moveDrone(start, result.path[i]);
+      const dx = result.path[i].x - dronePosition.x;
+      const dy = result.path[i].y - dronePosition.y;
+      moveDrone(dx, dy);
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
-
-    if (stopFlag.current) {
-      showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD DETENIDA</b>")
-    }else{
-      showCompletitionMessage("<b>BÚSQUEDA POR PROFUNDIDAD COMPLETA</b>")
-    }
+    showCompletitionMessage("Búsqueda por profundidad completa");
   };
-
-  const [activeTab, setActiveTab] = useState("noInformada");
 
   return (
     <div className="container">
-      <h1><img src="/icono_univalle.ico" alt="" /> Smart Drone 🚁 </h1>
+      <h2>Smart Drone 🚁</h2>
+      <p>Coste actual: {cost}</p>
+      <p>Paquetes restantes: {packagesLeft}</p>
+      <p>Nodos expandidos: {expandedNodes}</p>
+      <p>Profundidad máxima: {maxDepth}</p>
+      <p>Tiempo de cómputo: {computationTime}ms</p>
+      {completionMessage && (
+        <p className="completion-message">{completionMessage}</p>
+      )}
       <div className="sub-contaioner">
-        <div>
-          <div className="grid">
-            {grid.map((row, y) =>
-              row.map((cell, x) => {
-                const isDrone = dronePosition.x === x && dronePosition.y === y;
-                const cellClass = isDrone
-                  ? baseGrid[y][x] === 3
-                    ? "drone-electromagnetic"
-                    : "drone"
-                  : "";
-                return (
-                  <div key={`${x}-${y}`} className={`cell ${cellClass}`}>
-                    {isDrone ? "🚁" : ICONS[cell] || ""}
-                  </div>
-                );
-              })
-            )}
-          </div>
-          <div>
-            {completionMessage && <p className="completion-message" dangerouslySetInnerHTML={{ __html: completionMessage }}></p>}
-          </div>
+        <div className="grid">
+          {grid.map((row, y) =>
+            row.map((cell, x) => {
+              const isDrone = dronePosition.x === x && dronePosition.y === y;
+              const cellClass = isDrone
+                ? baseGrid[y][x] === 3
+                  ? "drone-electromagnetic"
+                  : "drone"
+                : "";
+              return (
+                <div key={`${x}-${y}`} className={`cell ${cellClass}`}>
+                  {isDrone ? "🚁" : ICONS[cell] || ""}
+                </div>
+              );
+            })
+          )}
         </div>
-
         <div className="world">
           <div className="controls">
-
-            {/* 
             <div className="row">
               <button onClick={() => moveDrone(0, -1)}>⬆️</button>
             </div>
@@ -424,104 +311,43 @@ function App() {
               <button onClick={() => moveDrone(-1, 0)}>⬅️</button>
               <button onClick={() => moveDrone(0, 1)}>⬇️</button>
               <button onClick={() => moveDrone(1, 0)}>➡️</button>
-            </div> 
-            */}
-
-            <div className="container-tabs">
-              <div className="tabs">
-                <button
-                  className={activeTab === "noInformada" ? "tab active" : "tab"}
-                  onClick={() => setActiveTab("noInformada")}
-                >
-                  Búsqueda No Informada
-                </button>
-                <button
-                  className={activeTab === "informada" ? "tab active" : "tab"}
-                  onClick={() => setActiveTab("informada")}
-                >
-                  Búsqueda Informada
-                </button>
-              </div>
-
-              {/* Botones según la pestaña activa */}
-              {activeTab === "noInformada" && (
-                <>
-                  <div className="row">
-                    <button onClick={runBreadthFirstSearch}>Búsqueda por Amplitud</button>
-                  </div>
-                  <div className="row">
-                    <button onClick={runDepthFirstSearch}>Búsqueda por Profundidad</button>
-                  </div>
-                  <div className="row">
-                    <button onClick={runUniformCostSearch}>Búsqueda de Costo Uniforme</button>
-                  </div>
-                </>
-              )}
-
-              {activeTab === "informada" && (
-                <>
-                  <div className="row">
-                    <button onClick={runGreedyBestFirstSearch}>Búsqueda Avara</button>
-                  </div>
-                  <div className="row">
-                    <button onClick={runAStarSearch}>Búsqueda A*</button>
-                  </div>
-                </>
-              )}
-
             </div>
-
-            <div>
-              <table className="result-table">
-                <tbody>
-                  <tr><td><b>Coste actual:</b> </td><td>{cost}</td></tr>
-                  <tr><td><b>Paquetes restantes:</b> </td><td>{packagesLeft}</td></tr> 
-                </tbody>
-              </table>
-
-              <table className="result-table">
-                <tbody>
-                  <tr><td><b>Costo total:</b></td><td>{totalCost}</td></tr>
-                  <tr><td><b>Nodos expandidos:</b></td><td>{expandedNodes}</td></tr>
-                  <tr><td><b>Profundidad maxima:</b></td><td>{maxDepth}</td></tr>
-                  <tr><td><b>Tiempo de computo:</b></td><td>{computationtime.toFixed(2) } Seg.</td></tr>                  
-                </tbody>
-              </table>
+            <div className="row">
+              <button onClick={resetMap}>Reiniciar Mapa</button>
+            </div>
+            <br />
+            <div className="row">
+              <button onClick={runBreadthFirstSearch}>
+                Búsqueda por Amplitud
+              </button>
+            </div>
+            <div className="row">
+              <button onClick={runDepthFirstSearch}>
+                Búsqueda por Profundidad
+              </button>
+            </div>
+            <div className="row">
+              <button onClick={runUniformCostSearch}>
+                Búsqueda de Costo Uniforme
+              </button>
+            </div>
+            <div className="row">
+              <button onClick={runGreedyBestFirstSearch}>Búsqueda Voraz</button>
+            </div>
+            <div className="row">
+              <button onClick={runAStarSearch}>Búsqueda A*</button>
             </div>
           </div>
-
-          <div className="generate">
-            <div>
-              <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                rows={11}
-                cols={21}
-                style={{ resize: "none" }}
-              ></textarea>
-            </div>
-            <div>
-
-              <div className="row">
-                <button className="control-button" onClick={triggerFileInput}>📁 Subir archivo</button>
-                <input
-                  key={inputKey}
-                  type="file"
-                  accept=".txt"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  style={{ display: "none" }}
-                />
-              </div>
-              <div className="row">
-                <button className="control-button" onClick={generateWorld}>Generar Mundo</button>
-              </div>
-
-              <div className="row">
-                <button className="control-button" onClick={resetMap}>Reiniciar Mapa</button>
-              </div>
-
-            </div>
+          <div>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              rows={15}
+              cols={30}
+              style={{ resize: "none" }}
+            ></textarea>
+            <br />
+            <button onClick={generateWorld}>Generar Mundo</button>
           </div>
         </div>
       </div>
