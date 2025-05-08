@@ -51,8 +51,4 @@ export const DIRECTIONS = [
     { dx: -1, dy: 0 },  // Izquierda
     { dx: 0, dy: -1 },  // Arriba
     { dx: 0, dy: 1 },   // Abajo
-    { dx: 1, dy: 1 },   // Abajo y Derecha
-    { dx: -1, dy: 1 },  // Abajo e Izquierda
-    { dx: 1, dy: -1 },  // Arriba y Derecha
-    { dx: 0, dy: 1 },   // Arriba e Izquierda
 ];
